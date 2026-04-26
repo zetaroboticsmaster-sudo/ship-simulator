@@ -195,9 +195,9 @@ canvas#cmp{width:100%;max-width:180px;aspect-ratio:1;display:block;margin:0 auto
 
 <div class="main">
   <div id="map">
-    <div class="map-phase" id="mapPhase"><div class="mp-time" id="mpTime">06:00</div><div class="mp-phase" id="mpPhase" style="color:var(--c)">들물</div><div class="mp-slack" id="mpSlack"></div></div>
+    <div class="map-phase" id="mapPhase"><div class="mp-time" id="mpTime">06:00</div><div class="mp-phase" id="mpPhase" style="color:var(--c)">밀물</div><div class="mp-slack" id="mpSlack"></div></div>
     <div class="m-hint" id="mHint">📍 포인트 선택 → 계산하기</div>
-    <div class="m-leg"><div><div class="dot" style="background:var(--c)"></div> 들물</div><div><div class="dot" style="background:var(--wa)"></div> 물돌이</div><div><div class="dot" style="background:var(--w)"></div> 날물</div><div style="margin-top:2px;border-top:1px solid var(--bd);padding-top:2px"><span style="color:var(--w)">━</span>바람 <span style="color:var(--c)">━</span>조류 <span style="color:var(--e)">━</span>합성</div></div>
+    <div class="m-leg"><div><div class="dot" style="background:var(--c)"></div> 밀물</div><div><div class="dot" style="background:var(--wa)"></div> 물돌이</div><div><div class="dot" style="background:var(--w)"></div> 썰물</div><div style="margin-top:2px;border-top:1px solid var(--bd);padding-top:2px"><span style="color:var(--w)">━</span>바람 <span style="color:var(--c)">━</span>조류 <span style="color:var(--e)">━</span>합성</div></div>
     <div class="m-info" id="mCoord">—</div>
   </div>
   <div class="sb">
@@ -211,7 +211,7 @@ canvas#cmp{width:100%;max-width:180px;aspect-ratio:1;display:block;margin:0 auto
     <div class="tab-content" id="tab1">
       <div class="sec"><div class="sec-t">🌬️ 바람</div><div class="chips"><button class="chip" onclick="sW(0)">북</button><button class="chip" onclick="sW(315)">북서</button><button class="chip" onclick="sW(270)">서</button><button class="chip" onclick="sW(225)">남서</button><button class="chip" onclick="sW(180)">남</button><button class="chip" onclick="sW(135)">남동</button><button class="chip" onclick="sW(90)">동</button><button class="chip" onclick="sW(45)">북동</button></div><div class="row"><label>풍향</label><input type="number" id="wD" value="315" min="0" max="360"><span class="u">°</span></div><div class="row"><label>풍속</label><input type="number" id="wS" value="5" min="0" max="25" step=".5"><span class="u">m/s</span></div>
       <div class="live"><div class="live-c"><div class="ll">현재 풍향</div><div class="lv" id="lwD" style="color:var(--w)">—</div></div><div class="live-c"><div class="ll">현재 풍속</div><div class="lv" id="lwS" style="color:var(--w)">—</div></div></div></div>
-      <div class="sec"><div class="sec-t">🌊 조류</div><div class="row"><label>들물</label><input type="number" id="fD" value="330" min="0" max="360"><span class="u">°</span></div><div class="row"><label>날물</label><input type="number" id="eD" value="150" min="0" max="360"><span class="u">°</span></div><div class="row"><label>세기</label><input type="number" id="cM" value="0.8" min="0" max="3" step=".1"><span class="u">kn</span></div>
+      <div class="sec"><div class="sec-t">🌊 조류</div><div class="row"><label>밀물</label><input type="number" id="fD" value="330" min="0" max="360"><span class="u">°</span></div><div class="row"><label>썰물</label><input type="number" id="eD" value="150" min="0" max="360"><span class="u">°</span></div><div class="row"><label>세기</label><input type="number" id="cM" value="0.8" min="0" max="3" step=".1"><span class="u">kn</span></div>
       <div class="live"><div class="live-c"><div class="ll">현재 유향</div><div class="lv" id="lcD" style="color:var(--c)">—</div></div><div class="live-c"><div class="ll">현재 유속</div><div class="lv" id="lcS" style="color:var(--c)">—</div></div></div></div>
       <div class="sec"><div class="sec-t">⚓ 선박</div><div class="row"><label>풍닻</label><select id="aY"><option value="1">있음</option><option value="0">없음</option></select></div><div class="row"><label>규모</label><select id="aS"><option value=".35">소형(~5t)</option><option value=".50">중형</option><option value=".65" selected>중대형(9.77t)</option><option value=".80">대형</option><option value=".95">초대형</option></select></div></div>
     </div>
@@ -435,7 +435,7 @@ function calcCorr(){
 function calc(wF,wSp,cD,cSp,aP,hasA){
   // 물리 모델 v4 (2026-04-21 GPX 실측 검증)
   // 선수방향: 풍닻=선수에서 투입 → 조류 반대방향으로 선수 당김
-  // 실측: 들물70°시 선수210°(바람+조류반대 블렌드), 날물250°시 선수~90°(조류반대 우세)
+  // 실측: 밀물70°시 선수210°(바람+조류반대 블렌드), 썰물250°시 선수~90°(조류반대 우세)
 
   // === 1. 선수 방향 (풍닻 견인 + 바람 토크 균형) ===
   let bow;
@@ -490,7 +490,48 @@ function calc(wF,wSp,cD,cSp,aP,hasA){
   return{bow,rD,rS,eT,em,col,pr,cvx,cvy,wvx,wvy,rx,ry,cE,wDr,cD,cSp,residualRatio};
 }
 
-function build(){fishS=+document.getElementById('fishStart').value||6;fishE=+document.getElementById('fishEnd').value||18;const wF=+document.getElementById('wD').value||315,wSp=+document.getElementById('wS').value||5;const flD=+document.getElementById('fD').value||330,ebD=+document.getElementById('eD').value||150;const cMax=+document.getElementById('cM').value||.8;const hasA=document.getElementById('aY').value==='1',aP=+document.getElementById('aS').value||.65;const md=calcCorr();const totalSteps=(fishE-fishS)*6;document.getElementById('pSl').max=totalSteps-1;H=[];
+function build(){fishS=+document.getElementById('fishStart').value||6;fishE=+document.getElementById('fishEnd').value||18;const wF=+document.getElementById('wD').value||315,wSp=+document.getElementById('wS').value||5;const flD=+document.getElementById('fD').value||250,ebD=+document.getElementById('eD').value||70;const cMax=+document.getElementById('cM').value||.8;const hasA=document.getElementById('aY').value==='1',aP=+document.getElementById('aS').value||.65;const md=calcCorr();const totalSteps=(fishE-fishS)*6;document.getElementById('pSl').max=totalSteps-1;H=[];
+
+// ===== 조류 전환점 계산 (하루 전체) =====
+// 조류는 만조/간조보다 위상차만큼 늦게 전환됨
+// 만조 후 + lag → 밀물→썰물 (서→동)
+// 간조 후 + lag → 썰물→밀물 (동→서)
+const PHASE_LAG=2; // 시간 (4/21 GPX: 간조06:37 → 전환08:30 = 113분 ≈ 2시간)
+
+// 조류 전환점 배열: {h:시각, toDir:전환후방향, toLabel:전환후라벨}
+let transitions=[];
+if(khoaTide&&khoaTide.highs&&khoaTide.lows){
+  // KHOA 조석 데이터로 전환점 계산
+  khoaTide.highs.forEach(ht=>{
+    transitions.push({h:ht.h+PHASE_LAG, toDir:ebD, toLabel:'썰물'}); // 만조 후 → 썰물
+  });
+  khoaTide.lows.forEach(lt=>{
+    transitions.push({h:lt.h+PHASE_LAG, toDir:flD, toLabel:'밀물'}); // 간조 후 → 밀물
+  });
+}else{
+  // 폴백: slackH(간조) 기준 2개 전환점
+  transitions.push({h:slackH+PHASE_LAG, toDir:flD, toLabel:'밀물'}); // 간조 후 → 밀물
+  transitions.push({h:slackH+PHASE_LAG+6.2, toDir:ebD, toLabel:'썰물'}); // 만조 후 → 썰물
+}
+transitions.sort((a,b)=>a.h-b.h);
+// 첫 전환점 이전 시간대를 위한 가상 전환점 추가
+// 첫 전환이 썰물(70°)이면 그 전에는 밀물(250°)이었음
+if(transitions.length>0){
+  const firstDir=transitions[0].toDir;
+  const prevDir=firstDir===flD?ebD:flD;
+  const prevLabel=firstDir===flD?'썰물':'밀물';
+  transitions.unshift({h:0, toDir:prevDir, toLabel:prevLabel});
+}
+// 마지막 전환 이후를 위한 가상 전환점
+if(transitions.length>1){
+  const lastDir=transitions[transitions.length-1].toDir;
+  transitions.push({h:24, toDir:lastDir, toLabel:transitions[transitions.length-1].toLabel});
+}
+
+// 물돌이 지속시간 (물세기에 따라)
+// 실측: 3물(~15%) = 4시간, 11물(92%) = 짧음
+const slackDuration=Math.max(0.5, 4*(1-tideStr)); // 0.5~4시간
+
 for(let i=0;i<totalSteps;i++){const h=fishS+i/6,ts=FM(h);let wd=wF,ws=wSp;if(gfs){const hi=Math.floor(h)-fishS,hf=h-Math.floor(h);if(hi>=0&&hi<gfs.d.length){const nx=Math.min(hi+1,gfs.d.length-1);wd=gfs.d[hi]+(gfs.d[nx]-gfs.d[hi])*hf;ws=gfs.s[hi]+(gfs.s[nx]-gfs.s[hi])*hf;}}let cd,cs,ph;
 if(khoaCurrent&&khoaCurrent.length>1){
   // KHOA 공식 조류 데이터 사용 (시간 보간)
@@ -498,21 +539,56 @@ if(khoaCurrent&&khoaCurrent.length>1){
   for(let k=0;k<khoaCurrent.length-1;k++){if(khoaCurrent[k].h<=h&&khoaCurrent[k+1].h>h){p0=khoaCurrent[k];p1=khoaCurrent[k+1];break;}if(k===khoaCurrent.length-2){p0=khoaCurrent[k];p1=khoaCurrent[k+1];}}
   const frac=(h-p0.h)/(p1.h-p0.h||1);
   cd=p0.dir+(p1.dir-p0.dir)*frac;cs=p0.spd+(p1.spd-p0.spd)*frac;
-  ph=cs<0.05?'물돌이':cd>180?'날물':'들물';
+  // 방향으로 밀물/썰물 판정: 밀물=서향(180~360), 썰물=동향(0~180)
+  const dToFl=Math.abs(((cd-flD+180)%360)-180);
+  const dToEb=Math.abs(((cd-ebD+180)%360)-180);
+  ph=cs<0.05?'물돌이':dToFl<dToEb?'밀물':'썰물';
 }else{
-  // 폴백: 자체 사인파 근사 + 위상차 보정
-  // 조류 전환은 만조/간조보다 약 2시간 늦음 (실측 검증: 4/21 GPX + 4/25 선장 확인)
-  const PHASE_LAG=2; // 조류 위상차 (시간)
-  const currentSlackH=slackH+PHASE_LAG; // 실제 조류 전환 시각
-  const dt=h-currentSlackH,tw=1.5;
-  if(dt<-tw){cd=flD;cs=cMax*tideStr*Math.max(0,Math.sin(Math.PI*(h-fishS)/Math.max(currentSlackH-tw-fishS,1)));ph='들물';}
-  else if(dt>tw){cd=ebD;cs=cMax*tideStr*Math.max(0,Math.sin(Math.PI*(h-currentSlackH-tw)/Math.max(fishE-currentSlackH-tw,1)));ph='날물';}
-  else{const pg=(dt+tw)/(2*tw);let ad=ebD-flD;if(ad<0)ad+=360;cd=(flD+ad*pg)%360;cs=cMax*tideStr*.06;ph='물돌이';}
+  // 폴백: 전환점 기반 조류 모델
+  // 현재 시각이 어느 전환점 사이에 있는지 찾기
+  let prevTr=transitions[transitions.length-1]; // 이전 전환
+  let nextTr=transitions[0]; // 다음 전환
+  for(let t=0;t<transitions.length;t++){
+    if(transitions[t].h>h){nextTr=transitions[t];break;}
+    prevTr=transitions[t];
+    nextTr=transitions[(t+1)%transitions.length];
+  }
+  
+  const dtToNext=nextTr.h-h;
+  const dtFromPrev=h-prevTr.h;
+  const halfSlack=slackDuration/2;
+  
+  if(dtToNext<=halfSlack&&dtToNext>=0){
+    // 다음 전환 직전 = 물돌이 진입
+    const progress=1-dtToNext/halfSlack; // 0→1
+    cd=prevTr.toDir;
+    cs=cMax*tideStr*Math.max(0,(1-progress)*0.3);
+    ph='물돌이';
+  }else if(dtFromPrev<=halfSlack&&dtFromPrev>=0){
+    // 전환 직후 = 물돌이 탈출
+    const progress=dtFromPrev/halfSlack; // 0→1
+    cd=prevTr.toDir; // 새 방향
+    cs=cMax*tideStr*Math.max(0,progress*0.3);
+    ph='물돌이';
+  }else if(dtFromPrev>halfSlack){
+    // 전환 후 본류 구간
+    cd=prevTr.toDir;
+    const segLen=(nextTr.h-prevTr.h)||6.2;
+    const midPoint=prevTr.h+segLen/2;
+    cs=cMax*tideStr*Math.max(0.02,Math.sin(Math.PI*(h-prevTr.h-halfSlack)/Math.max(segLen-slackDuration,1)));
+    ph=prevTr.toLabel;
+  }else{
+    // 전환 전 본류 구간 (이전 방향 유지)
+    cd=prevTr.toDir;
+    cs=cMax*tideStr*0.3;
+    ph=prevTr.toLabel;
+  }
+  cs=Math.max(0,Math.min(cs,cMax*1.2));
 }
 const r=calc(wd,ws,cd,cs,aP,hasA);r.h=h;r.ts=ts;r.ph=ph;r.wd=wd;r.ws=ws;H.push(r);}
 P=[{lat:pLat,lon:pLon}];let la=pLat,lo=pLon;H.forEach(d=>{la+=d.rS/6*Math.cos(DR(d.rD))/60;lo+=d.rS/6*Math.sin(DR(d.rD))/(60*Math.cos(DR(la)));P.push({lat:la,lon:lo,d});});drawMap();buildTL();tick();}
 
-function drawMap(){hMks.forEach(m=>M.removeLayer(m));hMks=[];if(tLine)M.removeLayer(tLine);if(sMk)M.removeLayer(sMk);if(sMar)M.removeLayer(sMar);if(trLine)M.removeLayer(trLine);vGrp.clearLayers();sMk=L.marker([pLat,pLon],{icon:L.divIcon({className:'',html:'<div style="font-size:18px;filter:drop-shadow(0 0 3px #000)">⭐</div>',iconSize:[20,20],iconAnchor:[10,10]})}).addTo(M);tLine=L.polyline(P.map(p=>[p.lat,p.lon]),{color:'#ffd93d',weight:1.5,opacity:.2,dashArray:'4,4'}).addTo(M);P.forEach((p,i)=>{if(!i||i%6)return;const d=p.d;if(!d)return;const co=d.ph==='물돌이'?'#ff9f43':d.ph==='들물'?'#00e5a0':'#ff6b6b';hMks.push(L.circleMarker([p.lat,p.lon],{radius:3.5,fillColor:co,fillOpacity:.55,color:'#fff2',weight:.5}).addTo(M));hMks.push(L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:`<span style="font:700 8px 'IBM Plex Mono';color:${co};text-shadow:0 0 3px #000">${String(Math.floor(d.h)).padStart(2,'0')}</span>`,iconSize:[12,9],iconAnchor:[-2,4]})}).addTo(M));});sMar=mkShip(P[1]||P[0]);if(P.length>2)M.fitBounds(L.latLngBounds(P.map(p=>[p.lat,p.lon])).pad(.15));}
+function drawMap(){hMks.forEach(m=>M.removeLayer(m));hMks=[];if(tLine)M.removeLayer(tLine);if(sMk)M.removeLayer(sMk);if(sMar)M.removeLayer(sMar);if(trLine)M.removeLayer(trLine);vGrp.clearLayers();sMk=L.marker([pLat,pLon],{icon:L.divIcon({className:'',html:'<div style="font-size:18px;filter:drop-shadow(0 0 3px #000)">⭐</div>',iconSize:[20,20],iconAnchor:[10,10]})}).addTo(M);tLine=L.polyline(P.map(p=>[p.lat,p.lon]),{color:'#ffd93d',weight:1.5,opacity:.2,dashArray:'4,4'}).addTo(M);P.forEach((p,i)=>{if(!i||i%6)return;const d=p.d;if(!d)return;const co=d.ph==='물돌이'?'#ff9f43':d.ph==='밀물'?'#00e5a0':'#ff6b6b';hMks.push(L.circleMarker([p.lat,p.lon],{radius:3.5,fillColor:co,fillOpacity:.55,color:'#fff2',weight:.5}).addTo(M));hMks.push(L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:`<span style="font:700 8px 'IBM Plex Mono';color:${co};text-shadow:0 0 3px #000">${String(Math.floor(d.h)).padStart(2,'0')}</span>`,iconSize:[12,9],iconAnchor:[-2,4]})}).addTo(M));});sMar=mkShip(P[1]||P[0]);if(P.length>2)M.fitBounds(L.latLngBounds(P.map(p=>[p.lat,p.lon])).pad(.15));}
 
 function mkShip(p){const d=p.d||H[0];const bs=getBestSeat(d);return L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:sSvg(d.bow,d.rD,d.ph,bs),iconSize:[100,100],iconAnchor:[50,50]}),zIndexOffset:1000}).addTo(M);}
 function getBestSeat(d){
@@ -523,7 +599,7 @@ function getBestSeat(d){
   return seat;
 }
 function sSvg(bw,dr,ph,bestSeat){
-  const pc=ph==='들물'?'#00e5a0':ph==='날물'?'#ff6b6b':'#ff9f43';
+  const pc=ph==='밀물'?'#00e5a0':ph==='썰물'?'#ff6b6b':'#ff9f43';
   bestSeat=bestSeat||1;
   // 10 seat positions around the boat (clockwise from bow-starboard)
   const seats=[
@@ -567,7 +643,7 @@ const co2={lat:p.lat-.0018,lon:p.lon+.0018},cl2=Math.max(d.cE*s*18,.0018);const 
 const rl=Math.max(d.rS*s*18,.0018);const re={lat:p.lat+rl*Math.cos(DR(d.rD)),lon:p.lon+rl*Math.sin(DR(d.rD))/cl};L.polyline([[p.lat,p.lon],[re.lat,re.lon]],{color:'#ffd93d',weight:6,opacity:.85}).addTo(vGrp);L.circleMarker([re.lat,re.lon],{radius:6,fillColor:'#ffd93d',fillOpacity:1,stroke:false}).addTo(vGrp);vGrp.addLayer(L.marker([re.lat,re.lon],{icon:L.divIcon({className:'',html:`<span style="font:800 11px IBM Plex Mono;color:#ffd93d;text-shadow:0 0 4px #000;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:2px">합성${d.rD.toFixed(0)}°</span>`,iconSize:[80,16],iconAnchor:[-2,7]})}));}
 
 function buildTL(){const grid=document.getElementById('tlGrid');grid.innerHTML='';const hourly=[];for(let h=fishS;h<fishE;h++){const idx=(h-fishS)*6;const d=H[idx];if(!d)continue;hourly.push(d);// 정조 ±1시간 구간 표시
-const isSlackZone=Math.abs(h-(slackH+2))<=1||Math.abs(h-(slackH+2+6.2))<=1||Math.abs(h-(slackH+2-6.2))<=1;
+const isSlackZone=d.ph==='물돌이'||(idx>0&&H[idx-1]&&H[idx-1].ph==='물돌이')||(idx<H.length-6&&H[idx+6]&&H[idx+6].ph==='물돌이');
 const item=document.createElement('div');item.className='tl-item'+(d.ph==='물돌이'?' slack':'')+(isSlackZone?' slack-zone':'');item.style.background=d.col+'25';item.style.color=d.col;item.innerHTML=`<div class="tl-h">${String(h).padStart(2,'0')}</div><div class="tl-e">${d.em}</div>`;item.onclick=()=>{document.getElementById('pSl').value=idx;tick();};grid.appendChild(item);}
 let bS=-1,bL=0,cS2=-1,cL=0;hourly.forEach((d,i)=>{if(d.pr>=4){if(cS2<0)cS2=i;cL++;}else{if(cL>bL){bL=cL;bS=cS2;}cS2=-1;cL=0;}});if(cL>bL){bL=cL;bS=cS2;}
 if(bL>0){document.getElementById('bestV').textContent=`🔥 ${String(fishS+bS).padStart(2,'0')}~${String(fishS+bS+bL).padStart(2,'0')}시 (${bL}시간)`;document.getElementById('bestD').textContent='선수~우현선수 진입 유지 — 최적 시간대';}
@@ -593,7 +669,7 @@ else{cS2=-1;cL=0;bS=-1;bL=0;hourly.forEach((d,i)=>{if(d.pr>=3){if(cS2<0)cS2=i;cL
 
 function drawCmp(d){const cv=document.getElementById('cmp'),rc=cv.getBoundingClientRect(),dp=devicePixelRatio||1;cv.width=rc.width*dp;cv.height=rc.height*dp;const ctx=cv.getContext('2d');ctx.scale(dp,dp);const w=rc.width,h=rc.height,cx=w/2,cy=h/2,R=Math.min(w,h)/2-18;ctx.clearRect(0,0,w,h);for(let r=R*.5;r<=R;r+=R*.5){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#1e3a6020';ctx.lineWidth=.7;ctx.stroke();}for(let dg=0;dg<360;dg+=30){const a=DR(dg-90);ctx.beginPath();ctx.moveTo(cx+(R-4)*Math.cos(a),cy+(R-4)*Math.sin(a));ctx.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));ctx.strokeStyle=dg%90===0?'#dfe8f328':'#5580a812';ctx.lineWidth=.7;ctx.stroke();}[{l:'N',g:0,c:'#f55'},{l:'E',g:90},{l:'S',g:180},{l:'W',g:270}].forEach(c=>{const a=DR(c.g-90),r=R+10;ctx.font='700 9px Noto Sans KR';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=c.c||'#dfe8f335';ctx.fillText(c.l,cx+r*Math.cos(a),cy+r*Math.sin(a));});const arrow=(x1,y1,x2,y2,co,lw,as,da)=>{const dx=x2-x1,dy=y2-y1;if(Math.sqrt(dx*dx+dy*dy)<1.5)return;const an=Math.atan2(dy,dx);ctx.save();if(da)ctx.setLineDash(da);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=co;ctx.lineWidth=lw;ctx.stroke();ctx.setLineDash([]);ctx.restore();ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-as*Math.cos(an-.4),y2-as*Math.sin(an-.4));ctx.lineTo(x2-as*Math.cos(an+.4),y2-as*Math.sin(an+.4));ctx.closePath();ctx.fillStyle=co;ctx.fill();};const mm=Math.max(Math.sqrt(d.cvx**2+d.cvy**2),Math.sqrt(d.wvx**2+d.wvy**2),Math.sqrt(d.rx**2+d.ry**2),.04),sc=R*.38/mm;arrow(cx+2,cy,cx+2+d.cvx*sc,cy-d.cvy*sc,'#00e5a0',2,6);if(d.wDr>.001)arrow(cx-2,cy,cx-2+d.wvx*sc,cy-d.wvy*sc,'#ff6b6b',1.5,5,[3,2]);ctx.save();ctx.shadowColor='#ffd93d35';ctx.shadowBlur=3;arrow(cx,cy,cx+d.rx*sc,cy-d.ry*sc,'#ffd93d',2.5,8);ctx.restore();ctx.save();ctx.translate(cx,cy);ctx.rotate(DR(d.bow));const bL2=12,bW=4;ctx.beginPath();ctx.moveTo(0,-bL2);ctx.lineTo(bW,-bL2*.3);ctx.lineTo(bW,bL2*.7);ctx.lineTo(bW*.5,bL2);ctx.lineTo(-bW*.5,bL2);ctx.lineTo(-bW,bL2*.7);ctx.lineTo(-bW,-bL2*.3);ctx.closePath();ctx.fillStyle='rgba(78,205,196,.07)';ctx.strokeStyle='rgba(78,205,196,.3)';ctx.lineWidth=1.2;ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,-bL2-2);ctx.lineTo(1.5,-bL2+1);ctx.lineTo(-1.5,-bL2+1);ctx.closePath();ctx.fillStyle='#4ecdc4';ctx.fill();ctx.restore();}
 
-function tick(){const i=+document.getElementById('pSl').value,d=H[i];if(!d)return;const p=P[i+1]||P[P.length-1];document.getElementById('pTime').textContent=d.ts;document.getElementById('mpTime').textContent=d.ts;const mp=document.getElementById('mpPhase');mp.textContent=d.ph;mp.style.color=d.ph==='물돌이'?'var(--wa)':d.ph==='들물'?'var(--c)':'var(--w)';const curSeat=getBestSeat(d);
+function tick(){const i=+document.getElementById('pSl').value,d=H[i];if(!d)return;const p=P[i+1]||P[P.length-1];document.getElementById('pTime').textContent=d.ts;document.getElementById('mpTime').textContent=d.ts;const mp=document.getElementById('mpPhase');mp.textContent=d.ph;mp.style.color=d.ph==='물돌이'?'var(--wa)':d.ph==='밀물'?'var(--c)':'var(--w)';const curSeat=getBestSeat(d);
 document.getElementById('xR').textContent=d.em+' '+d.eT+' ('+curSeat+'번 최적)';document.getElementById('xD').textContent=GC(d.rD)+'쪽 | '+d.ph;document.getElementById('xDir').innerHTML=d.rD.toFixed(0)+'°';document.getElementById('xDir').style.color=d.col;document.getElementById('xSpd').innerHTML=d.rS.toFixed(2)+'kn';document.getElementById('xBow').innerHTML=d.bow.toFixed(0)+'°';document.getElementById('lwD').textContent=Math.round(d.wd)+'°'+GC(d.wd);document.getElementById('lwS').textContent=d.ws.toFixed(1)+'m/s';document.getElementById('lcD').textContent=Math.round(d.cD)+'°'+GC(d.cD);document.getElementById('lcS').textContent=d.cSp.toFixed(2)+'kn';if(sMar)M.removeLayer(sMar);sMar=mkShip(p);if(trLine)M.removeLayer(trLine);trLine=L.polyline(P.slice(0,i+2).map(pp=>[pp.lat,pp.lon]),{color:'#ffd93d',weight:2.5,opacity:.6}).addTo(M);drawVec(p,d);const hIdx=Math.floor(d.h-fishS);document.querySelectorAll('.tl-item').forEach((c,j)=>c.classList.toggle('sel',j===hIdx));drawCmp(d);}
 
 let playSpeed=150; // ms per frame (x10 default)
@@ -884,12 +960,12 @@ const OBSERVATIONS = [
   {
     date:"2026-04-20", point:"법환/범섬남서", lat:33.22, lon:126.51,
     slack_predicted:"09:05", slack_actual:"08:44", slack_offset_min:-21,
-    entry_all_day:"선미", best_position:"좌현중앙", best_time:"오전(들물)",
+    entry_all_day:"선미", best_position:"좌현중앙", best_time:"오전(밀물)",
     afternoon:"꽝(선미진입지속)", wind_felt:"체감불가(약풍)",
     net_drift_direction:"서귀포(북쪽)방향", 
     boat_rotation:"물바뀔때_조류와함께회전",
-    second_slack:"물돌이없이_날물지속_16:50에도10%흐름",
-    current_pattern:"들물=서향250,날물=동향70",
+    second_slack:"물돌이없이_썰물지속_16:50에도10%흐름",
+    current_pattern:"밀물=서향250,썰물=동향70",
     notes:"풍닻ON,9.77t,11물92%,강한조류+약한바람=순이동은바람방향"
   },
   {
@@ -903,9 +979,9 @@ const OBSERVATIONS = [
     },
     bow:{initial:180,stabilized:210,ebb:270,ebb_note:"바람강해서_선수유지_이동만반전"},
     best_positions:{1:"우현선수",5:"우현선미",6:"좌현선미",10:"선수"},
-    entry_analysis:"날물시_이동277_선수270_각도7도=우현선수진입_실측일치",
+    entry_analysis:"썰물시_이동277_선수270_각도7도=우현선수진입_실측일치",
     wind_actual:"남~남남서(선수180→210°)",
-    current_pattern:"들물=서향277,날물=동향78(위상차약2시간)",
+    current_pattern:"밀물=서향277,썰물=동향78(위상차약2시간)",
     second_slack_actual:"~15:00",track_pattern:"동→서→동(3회왕복)",motoring_after:"17:00",notes:"풍닻ON,9.77t,12물77%,바람남남서,13:30-14:30선미조과,15시2차물돌이,이동반전(배안돌고),귀항17시이후"
   },
   {
