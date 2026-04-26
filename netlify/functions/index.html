@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>선진입계산기</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+:root{--bg:#091422;--p1:#0d1a2e;--p2:#12243d;--p3:#182e4e;--bd:#1e3a60;--w:#ff6b6b;--c:#00e5a0;--b:#4ecdc4;--e:#ffd93d;--wa:#ff9f43;--t:#dfe8f3;--d:#6088b0;--d2:#405a78;--safe-b:env(safe-area-inset-bottom,0px)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t);height:100vh;height:100dvh;display:grid;overflow:hidden}
+
+/* ===== DESKTOP: grid 3 rows ===== */
+body{grid-template-rows:auto 1fr auto}
+
+/* ===== HEADER ===== */
+.hd{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--p1);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.hd h1{font-size:1rem;font-weight:900;color:var(--e);white-space:nowrap}
+.hd-r{display:flex;align-items:center;gap:5px;margin-left:auto;flex-wrap:wrap}
+.hd-r label{font-size:.75rem;color:var(--d)}
+.hd-r input,.hd-r select{padding:3px 5px;background:var(--p2);border:1px solid var(--bd);border-radius:4px;color:var(--t);font-family:'IBM Plex Mono';font-size:.8rem;outline:none}
+.hd-r select{max-width:120px}
+.btn{padding:6px 12px;border:none;border-radius:5px;color:#000;font-size:.8rem;cursor:pointer;font-family:'Noto Sans KR';font-weight:700;background:var(--e);min-height:36px}
+.btn:active{filter:brightness(.85)}
+.btn:disabled{opacity:.4}
+.btn-st{font-size:.65rem;color:var(--d)}
+.hd .time-r{display:flex;align-items:center;gap:2px}
+.hd .time-r input{width:36px;text-align:center}
+
+/* ===== MAIN ===== */
+.main{display:flex;overflow:hidden;position:relative}
+#map{flex:1}
+.sb{width:340px;flex-shrink:0;background:var(--p1);border-left:1px solid var(--bd);overflow-y:auto}
+
+/* ===== SIDEBAR ===== */
+.sec{padding:7px 9px;border-bottom:1px solid var(--bd)}
+.sec-t{font-size:.8rem;font-weight:700;color:var(--d);margin-bottom:4px}
+.row{display:flex;gap:3px;align-items:center;margin-bottom:3px}
+.row label{font-size:.85rem;color:var(--d);min-width:38px}
+.row input,.row select{flex:1;padding:4px 5px;background:var(--p2);border:1px solid var(--bd);border-radius:4px;color:var(--t);font-family:'IBM Plex Mono';font-size:.95rem;outline:none;min-height:32px}
+.row .u{font-size:.7rem;color:var(--d2)}
+.chips{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:3px}
+.chip{padding:4px 8px;background:var(--p2);border:1px solid var(--bd);border-radius:3px;color:var(--d);font-size:.7rem;cursor:pointer;min-height:28px;display:flex;align-items:center}
+.chip:active{border-color:var(--b);color:var(--t)}
+.live{display:flex;gap:2px;margin-top:3px}
+.live-c{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:3px;padding:3px 4px;text-align:center}
+.live-c .ll{font-size:.5rem;color:var(--d2)}
+.live-c .lv{font-family:'IBM Plex Mono';font-size:.8rem;font-weight:600}
+.tide{padding:7px 9px;background:rgba(0,229,160,.03);border-bottom:1px solid var(--bd)}
+.tide .tr{display:flex;justify-content:space-between;font-size:.85rem;color:var(--d);margin:2px 0}
+.tide .tv{font-family:'IBM Plex Mono';font-weight:600;font-size:.85rem}
+.tide .k{color:var(--c)}.tide .co{color:var(--wa)}
+.tide .note{font-size:.7rem;color:var(--d2);margin-top:2px}
+canvas#cmp{width:100%;max-width:180px;aspect-ratio:1;display:block;margin:0 auto}
+.r-big{text-align:center;padding:6px;background:var(--p2);border:2px solid var(--e);border-radius:5px;margin-bottom:4px}
+.r-big .rv{font-family:'IBM Plex Mono';font-size:1.2rem;font-weight:700;color:var(--e)}
+.r-big .rs{font-size:.75rem;color:var(--d);margin-top:1px}
+.r-row{display:flex;gap:2px}
+.r-c{flex:1;background:var(--p2);border:1px solid var(--bd);border-radius:3px;padding:3px;text-align:center}
+.r-c .rl{font-size:.55rem;color:var(--d2)}
+.r-c .rv{font-family:'IBM Plex Mono';font-size:.9rem;font-weight:600;margin-top:1px}
+.tl-sum{padding:7px 9px;border-bottom:1px solid var(--bd);background:rgba(255,217,61,.02)}
+.tl-sum .sec-t{color:var(--e)}
+.tl-grid{display:flex;gap:1px;margin-bottom:3px;overflow-x:auto}
+.tl-item{min-width:26px;flex-shrink:0;border-radius:2px;padding:2px 1px;text-align:center;font-size:.5rem;font-weight:700;cursor:pointer}
+.tl-item .tl-h{font-family:'IBM Plex Mono';font-size:.65rem}
+.tl-item .tl-e{font-size:.55rem}
+.tl-item.sel{outline:2px solid #fff;outline-offset:-1px}
+.tl-item.slack{border:2px solid var(--wa)}
+.tl-item.slack-zone{border-bottom:3px solid #ff9f43;position:relative}
+.tl-item.slack-zone::after{content:'⚡';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);font-size:.45rem}
+.best-box{background:var(--p2);border:1px solid var(--c);border-radius:4px;padding:5px 7px;margin-top:3px}
+.best-box .bb-t{font-size:.65rem;color:var(--c);font-weight:700}
+.best-box .bb-v{font-size:.85rem;font-weight:700;color:var(--e);margin-top:1px}
+.best-box .bb-d{font-size:.7rem;color:var(--d);margin-top:1px}
+
+/* MAP OVERLAYS */
+.map-phase{position:absolute;top:8px;left:55px;z-index:800;background:rgba(13,26,46,.92);border:1px solid var(--bd);border-radius:5px;padding:5px 10px;pointer-events:none}
+.map-phase .mp-phase{font-size:1rem;font-weight:800}
+.map-phase .mp-time{font-family:'IBM Plex Mono';font-size:.8rem;color:var(--d)}
+.map-phase .mp-slack{font-size:.8rem;color:var(--wa);font-weight:700}
+.m-hint{position:absolute;top:70px;left:50%;transform:translateX(-50%);z-index:800;background:rgba(13,26,46,.92);border:1px solid var(--bd);border-radius:5px;padding:5px 12px;font-size:.8rem;color:var(--e);pointer-events:none;transition:opacity .3s;white-space:nowrap}
+.m-hint.off{opacity:0}
+.m-leg{position:absolute;bottom:6px;left:6px;z-index:800;background:rgba(13,26,46,.88);border:1px solid var(--bd);border-radius:4px;padding:4px 6px;font-size:.65rem;color:var(--d);line-height:1.5}
+.m-leg div{display:flex;align-items:center;gap:2px}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.m-info{position:absolute;top:8px;right:55px;z-index:800;background:rgba(13,26,46,.88);border:1px solid var(--bd);border-radius:4px;padding:3px 6px;font-size:.65rem;color:var(--d);font-family:'IBM Plex Mono'}
+
+/* ===== BOTTOM PLAYER ===== */
+.pl{padding:6px 10px;padding-bottom:calc(6px + var(--safe-b));background:var(--p1);border-top:2px solid var(--e)}
+.pl-row{display:flex;align-items:center;gap:6px}
+.pl-btn{width:44px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--e);border:none;border-radius:5px;color:#000;font-size:1rem;cursor:pointer;flex-shrink:0;font-weight:900}
+.pl-btn:active{filter:brightness(.85)}
+.spd-btn{padding:4px 7px;background:var(--p2);border:1px solid var(--bd);border-radius:4px;color:var(--d);font-size:.65rem;cursor:pointer;font-family:'IBM Plex Mono';font-weight:600;min-height:28px;display:flex;align-items:center}
+.spd-btn.act{background:var(--e);color:#000;font-weight:700;border-color:var(--e)}
+.pl-time{font-family:'IBM Plex Mono';font-size:1.1rem;font-weight:700;color:var(--e);min-width:48px;text-align:center}
+.pl input[type="range"]{flex:1;-webkit-appearance:none;height:8px;background:var(--p2);border-radius:4px;outline:none}
+.pl input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--e);cursor:pointer}
+
+/* ===== MOBILE TABS ===== */
+.mob-tabs{display:none;background:var(--p1);border-bottom:1px solid var(--bd)}
+.mob-tabs button{flex:1;padding:8px 4px;background:none;border:none;border-bottom:2px solid transparent;color:var(--d);font-size:.75rem;font-family:'Noto Sans KR';font-weight:600;cursor:pointer}
+.mob-tabs button.act{color:var(--e);border-bottom-color:var(--e)}
+.tab-content{display:none}
+.tab-content.act{display:block}
+
+/* ==============================
+   MOBILE (Fold6 closed: 374px)
+   ============================== */
+@media(max-width:768px){
+  body{grid-template-rows:auto auto 1fr auto auto}
+  .hd{padding:3px 8px;gap:4px}
+  .hd h1{font-size:.9rem}
+  .hd-r{width:100%;margin-left:0;gap:4px}
+  .hd-r label{font-size:.65rem}
+  .hd-r input,.hd-r select{font-size:.75rem;padding:3px 4px}
+  .hd-r select{flex:1;max-width:none}
+  .btn{padding:5px 10px;font-size:.75rem;min-height:32px}
+  .btn-st{font-size:.6rem}
+  .time-r input{width:32px!important;font-size:.75rem!important}
+  
+  .main{flex-direction:column}
+  #map{flex:1;min-height:40vh}
+  .sb{width:100%;border-left:none;border-top:1px solid var(--bd);max-height:35vh;overflow-y:auto}
+  
+  .mob-tabs{display:flex}
+  .sb>.sec,.sb>.tide,.sb>.tl-sum{display:none}
+  .sb>.tab-content.act{display:block}
+  
+  .sec{padding:6px 8px}
+  .sec-t{font-size:.75rem}
+  .row label{font-size:.8rem;min-width:34px}
+  .row input,.row select{font-size:.85rem;min-height:30px}
+  .chip{padding:5px 10px;font-size:.7rem;min-height:30px}
+  
+  .map-phase{top:6px;left:46px;padding:3px 8px}
+  .map-phase .mp-phase{font-size:.85rem}
+  .map-phase .mp-time{font-size:.7rem}
+  .map-phase .mp-slack{font-size:.7rem}
+  .m-hint{top:50px;font-size:.7rem;padding:4px 10px}
+  .m-leg{font-size:.58rem;padding:3px 5px}
+  .m-info{font-size:.6rem;top:6px;right:46px}
+  
+  .tl-grid{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tl-item{min-width:24px}
+  .best-box .bb-v{font-size:.8rem}
+  
+  .pl{padding:5px 8px;padding-bottom:calc(5px + var(--safe-b))}
+  .pl-btn{width:40px;height:34px;font-size:.9rem}
+  .pl-time{font-size:1rem;min-width:44px}
+  .pl input[type="range"]::-webkit-slider-thumb{width:22px;height:22px}
+  
+  canvas#cmp{max-width:160px}
+  .r-big .rv{font-size:1.1rem}
+  .r-c .rv{font-size:.85rem}
+  .live-c .lv{font-size:.75rem}
+  .tide .tr{font-size:.8rem}
+  .tide .tv{font-size:.8rem}
+}
+
+/* Fold6 unfolded inner screen */
+@media(min-width:769px) and (max-width:900px){
+  .sb{width:320px}
+}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <h1>⚓ 선진입계산기</h1>
+  <div class="hd-r">
+    <label>날짜</label><input type="date" id="inDate">
+    <select id="inPt" onchange="onPt()"><option value="">📍 지도 클릭</option><option value="33.38,126.10,330,150,한림항,33.406,126.236,30">한림/비양도</option><option value="33.42,126.18,330,150,애월,33.463,126.327,25">애월</option><option value="33.35,126.03,330,150,신창,33.341,126.018,35">신창</option><option value="33.22,126.51,250,70,서귀포,33.214,126.251,40">서귀포/법환/범섬</option><option value="33.20,126.15,250,70,모슬포,33.214,126.251,35">모슬포</option></select>
+    <div class="time-r"><input type="number" id="fishStart" value="6" min="0" max="23">~<input type="number" id="fishEnd" value="18" min="1" max="24">시</div>
+    <button class="btn" id="calcBtn" onclick="doCalc()">🔄 계산하기</button>
+    <button class="btn" style="background:var(--c)" onclick="getGPS()">📍 내 위치</button>
+    <button class="btn" id="trkBtn" style="background:var(--w)" onclick="toggleTrack()">🔴 항적기록</button>
+    <button class="btn" id="driftBtn" style="background:var(--d2);display:none" onclick="toggleDrift()">⚓ 풍 넣기</button>
+    <button class="btn" style="background:#ff9f43" id="slackBtn" onclick="recordSlack()">🔄 물돌이</button>
+    <span class="btn-st" id="gfsSt"></span>
+    <span class="btn-st" id="trkSt"></span>
+  </div>
+</div>
+
+<!-- MOBILE TABS (hidden on desktop) -->
+<div class="mob-tabs" id="mobTabs">
+  <button class="act" onclick="showTab(0)">📊 결과</button>
+  <button onclick="showTab(1)">🌬️ 설정</button>
+  <button onclick="showTab(2)">🧭 나침반</button>
+</div>
+
+<div class="main">
+  <div id="map">
+    <div class="map-phase" id="mapPhase"><div class="mp-time" id="mpTime">06:00</div><div class="mp-phase" id="mpPhase" style="color:var(--c)">들물</div><div class="mp-slack" id="mpSlack"></div></div>
+    <div class="m-hint" id="mHint">📍 포인트 선택 → 계산하기</div>
+    <div class="m-leg"><div><div class="dot" style="background:var(--c)"></div> 들물</div><div><div class="dot" style="background:var(--wa)"></div> 물돌이</div><div><div class="dot" style="background:var(--w)"></div> 날물</div><div style="margin-top:2px;border-top:1px solid var(--bd);padding-top:2px"><span style="color:var(--w)">━</span>바람 <span style="color:var(--c)">━</span>조류 <span style="color:var(--e)">━</span>합성</div></div>
+    <div class="m-info" id="mCoord">—</div>
+  </div>
+  <div class="sb">
+    <!-- TAB 0: Results (default on mobile) -->
+    <div class="tab-content act" id="tab0">
+      <div class="tl-sum"><div class="sec-t">📊 시간대별 진입방향</div><div class="tl-grid" id="tlGrid"></div><div class="best-box"><div class="bb-t">🏆 최적 자리</div><div class="bb-v" id="bestV">[계산하기]를 눌러주세요</div><div class="bb-d" id="bestD"></div></div></div>
+      <div class="tide"><div class="sec-t">🌊 조석 보정</div><div class="tr"><span>관측소</span><span class="tv k" id="tS">—</span></div><div class="tr"><span>거리</span><span class="tv k" id="tDist">—</span></div><div class="tr"><span>KHOA 만조</span><span class="tv k" id="tH">—</span></div><div class="tr"><span>🔄 물돌이</span><span class="tv co" id="tCS" style="font-size:1rem">—</span></div><div class="note" id="tWhy">—</div></div>
+      <div class="sec"><div class="r-big"><div class="rv" id="xR">—</div><div class="rs" id="xD"></div></div><div class="r-row"><div class="r-c"><div class="rl">이동</div><div class="rv" id="xDir" style="color:var(--e)">—</div></div><div class="r-c"><div class="rl">속도</div><div class="rv" id="xSpd" style="color:var(--c)">—</div></div><div class="r-c"><div class="rl">선수</div><div class="rv" id="xBow" style="color:var(--b)">—</div></div></div></div>
+    </div>
+    <!-- TAB 1: Settings -->
+    <div class="tab-content" id="tab1">
+      <div class="sec"><div class="sec-t">🌬️ 바람</div><div class="chips"><button class="chip" onclick="sW(0)">북</button><button class="chip" onclick="sW(315)">북서</button><button class="chip" onclick="sW(270)">서</button><button class="chip" onclick="sW(225)">남서</button><button class="chip" onclick="sW(180)">남</button><button class="chip" onclick="sW(135)">남동</button><button class="chip" onclick="sW(90)">동</button><button class="chip" onclick="sW(45)">북동</button></div><div class="row"><label>풍향</label><input type="number" id="wD" value="315" min="0" max="360"><span class="u">°</span></div><div class="row"><label>풍속</label><input type="number" id="wS" value="5" min="0" max="25" step=".5"><span class="u">m/s</span></div>
+      <div class="live"><div class="live-c"><div class="ll">현재 풍향</div><div class="lv" id="lwD" style="color:var(--w)">—</div></div><div class="live-c"><div class="ll">현재 풍속</div><div class="lv" id="lwS" style="color:var(--w)">—</div></div></div></div>
+      <div class="sec"><div class="sec-t">🌊 조류</div><div class="row"><label>들물</label><input type="number" id="fD" value="330" min="0" max="360"><span class="u">°</span></div><div class="row"><label>날물</label><input type="number" id="eD" value="150" min="0" max="360"><span class="u">°</span></div><div class="row"><label>세기</label><input type="number" id="cM" value="0.8" min="0" max="3" step=".1"><span class="u">kn</span></div>
+      <div class="live"><div class="live-c"><div class="ll">현재 유향</div><div class="lv" id="lcD" style="color:var(--c)">—</div></div><div class="live-c"><div class="ll">현재 유속</div><div class="lv" id="lcS" style="color:var(--c)">—</div></div></div></div>
+      <div class="sec"><div class="sec-t">⚓ 선박</div><div class="row"><label>풍닻</label><select id="aY"><option value="1">있음</option><option value="0">없음</option></select></div><div class="row"><label>규모</label><select id="aS"><option value=".35">소형(~5t)</option><option value=".50">중형</option><option value=".65" selected>중대형(9.77t)</option><option value=".80">대형</option><option value=".95">초대형</option></select></div></div>
+    </div>
+    <!-- TAB 2: Compass -->
+    <div class="tab-content" id="tab2">
+      <div class="sec"><div class="sec-t">🧭 나침반</div><canvas id="cmp" width="200" height="200"></canvas></div>
+    </div>
+    <!-- Desktop: show all -->
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div class="pl"><div class="pl-row"><div class="pl-btn" id="playB" onclick="togglePlay()">▶</div><div class="pl-time" id="pTime">06:00</div><div class="spd-btn" onclick="setSpeed(1500,this)">x1</div><div class="spd-btn" onclick="setSpeed(600,this)">x2.5</div><div class="spd-btn" onclick="setSpeed(300,this)">x5</div><div class="spd-btn act" onclick="setSpeed(150,this)">x10</div><input type="range" id="pSl" min="0" max="143" value="0" step="1" oninput="tick()"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ===== MOBILE TABS =====
+function showTab(n){
+  document.querySelectorAll('.mob-tabs button').forEach((b,i)=>b.classList.toggle('act',i===n));
+  document.querySelectorAll('.tab-content').forEach((t,i)=>t.classList.toggle('act',i===n));
+}
+// Desktop: show all tabs
+function checkDesktop(){
+  if(window.innerWidth>768){document.querySelectorAll('.tab-content').forEach(t=>t.classList.add('act'));}
+  else{const active=document.querySelector('.mob-tabs button.act');if(!active)showTab(0);}
+}
+window.addEventListener('resize',checkDesktop);
+
+// ===== STATE =====
+let M,sMk,tLine,trLine,sMar,vGrp,hMks=[];let pLat=33.38,pLon=126.10,H=[],P=[];let pTm=null,gfs=null;let sN='한림항',sLa=33.406,sLo=126.236,sDepth=30;let fishS=6,fishE=18;let trkActive=false;
+const DR=d=>d*Math.PI/180,RD=r=>((r*180/Math.PI)%360+360)%360;
+const GC=d=>{const k=['북','북북동','북동','동북동','동','동남동','남동','남남동','남','남남서','남서','서남서','서','서북서','북서','북북서'];return k[Math.round(d/22.5)%16]};
+const FM=h=>{const a=Math.floor(h),b=Math.round((h-a)*60);return String(a).padStart(2,'0')+':'+String(b).padStart(2,'0')};
+const DK=(a,b,c,d)=>{const R=6371,x=Math.sin(DR(c-a)/2)**2+Math.cos(DR(a))*Math.cos(DR(c))*Math.sin(DR(d-b)/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))};
+
+function initMap(){
+  const n=new Date(),d=document.getElementById('inDate');d.value=n.toISOString().slice(0,10);const mn=new Date(n);mn.setDate(mn.getDate()-7);d.min=mn.toISOString().slice(0,10);const mx=new Date(n);mx.setDate(mx.getDate()+7);d.max=mx.toISOString().slice(0,10);
+  M=L.map('map',{zoomControl:false}).setView([35.5,127.5],7);
+  L.control.zoom({position:'topright'}).addTo(M);
+  const vw=L.tileLayer('https://api.vworld.kr/req/wmts/1.0.0/16B94D28-D8CE-31CF-89AC-CEB2AC94DAE9/Base/{z}/{y}/{x}.png',{attribution:'©V-World 국토부',maxZoom:19});
+  const vwsat=L.tileLayer('https://api.vworld.kr/req/wmts/1.0.0/16B94D28-D8CE-31CF-89AC-CEB2AC94DAE9/Satellite/{z}/{y}/{x}.jpeg',{attribution:'©V-World',maxZoom:19});
+  const voy=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'©CartoDB',maxZoom:19,subdomains:'abcd'});
+  const dark=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'©CartoDB',maxZoom:19,subdomains:'abcd'});
+  const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'©Esri',maxZoom:18});
+  const sea=L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',{maxZoom:18});
+  vw.addTo(M);sea.addTo(M);
+  L.control.layers({'한국지도':vw,'위성(한국)':vwsat,'일반(영문)':voy,'다크':dark,'위성(글로벌)':sat},{'해도':sea},{position:'topright',collapsed:true}).addTo(M);
+  vGrp=L.layerGroup().addTo(M);
+  M.on('click',e=>{if(trkActive)return;pLat=e.latlng.lat;pLon=e.latlng.lng;document.getElementById('mHint').classList.add('off');document.getElementById('mCoord').textContent=pLat.toFixed(4)+'N '+pLon.toFixed(4)+'E';M.setView([pLat,pLon],13);
+  // 가장 가까운 프리셋의 조류방향 자동 적용
+  const presets=[{lat:33.38,lon:126.10,fD:330,eD:150,n:'한림',sLa:33.406,sLo:126.236,dep:30},{lat:33.42,lon:126.18,fD:330,eD:150,n:'애월',sLa:33.463,sLo:126.327,dep:25},{lat:33.35,lon:126.03,fD:330,eD:150,n:'신창',sLa:33.341,sLo:126.018,dep:35},{lat:33.22,lon:126.51,fD:70,eD:250,n:'서귀포',sLa:33.214,sLo:126.251,dep:40},{lat:33.20,lon:126.15,fD:70,eD:250,n:'모슬포',sLa:33.214,sLo:126.251,dep:35}];
+  let best=presets[0],bd=999;presets.forEach(p=>{const d=DK(pLat,pLon,p.lat,p.lon);if(d<bd){bd=d;best=p;}});
+  document.getElementById('fD').value=best.fD;document.getElementById('eD').value=best.eD;sN=best.n;sLa=best.sLa;sLo=best.sLo;sDepth=best.dep;
+  calcCorr();build();});
+  checkDesktop();
+}
+
+function onPt(){const v=document.getElementById('inPt').value;if(!v)return;const p=v.split(',');pLat=+p[0];pLon=+p[1];document.getElementById('fD').value=p[2];document.getElementById('eD').value=p[3];sN=p[4];sLa=+p[5];sLo=+p[6];sDepth=+p[7];document.getElementById('mHint').classList.add('off');document.getElementById('mCoord').textContent=pLat.toFixed(4)+'N '+pLon.toFixed(4)+'E';M.setView([pLat,pLon],13);calcCorr();build();}
+
+async function doCalc(){const st=document.getElementById('gfsSt');st.textContent='⏳ GFS 조회중...';st.style.color='var(--d)';document.getElementById('calcBtn').disabled=true;fishS=+document.getElementById('fishStart').value||6;fishE=+document.getElementById('fishEnd').value||18;const ts=(fishE-fishS)*6;document.getElementById('pSl').max=ts-1;document.getElementById('pSl').value=0;const dv=document.getElementById('inDate').value;
+try{const url=`https://api.open-meteo.com/v1/gfs?latitude=${pLat.toFixed(2)}&longitude=${pLon.toFixed(2)}&hourly=wind_speed_10m,wind_direction_10m&timezone=Asia/Seoul&start_date=${dv}&end_date=${dv}`;const r=await fetch(url);if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(j.error)throw new Error(j.reason||j.error);if(j.hourly){const d=[],s=[];j.hourly.time.forEach((t,i)=>{const h=parseInt(t.substring(11,13));if(h>=fishS&&h<=fishE){d.push(j.hourly.wind_direction_10m[i]);s.push(j.hourly.wind_speed_10m[i]);}});gfs={d,s};if(d.length){document.getElementById('wD').value=Math.round(d[0]);document.getElementById('wS').value=Math.round(s[0]*10)/10;}st.textContent='✅ GFS '+d.length+'시간 수신';st.style.color='var(--c)';}else throw new Error('데이터 없음');}catch(e){st.textContent='⚠️ GFS실패('+e.message+') → 수동값 사용';st.style.color='var(--wa)';gfs=null;}
+document.getElementById('calcBtn').disabled=false;build();fetchKMA();fetchKHOATide().then(ok=>{if(ok){calcCorr();build();}});fetchKHOACurrent().then(ok=>{if(ok)build();});}
+
+// ===== KMA 기상청 실측 관측 데이터 =====
+const KMA_KEY='b0504b6962206631ec5a4e260d8cfcc7a5e2e2b331bb7ceb5356451ed5c78817';
+let kmaObs=null; // {dirs:[], spds:[], hours:[]}
+
+async function fetchKMA(){
+  const dv=document.getElementById('inDate').value.replace(/-/g,'');
+  const st=document.getElementById('gfsSt');
+  try{
+    const url=`https://apis.data.go.kr/1360000/AsosHourlyInfoService/getWthrDataList?ServiceKey=${KMA_KEY}&pageNo=1&numOfRows=24&dataType=JSON&dataCd=ASOS&dateCd=HR&startDt=${dv}&startHh=00&endDt=${dv}&endHh=23&stnIds=189`;
+    const r=await fetch(url);
+    const j=await r.json();
+    if(j.response&&j.response.body&&j.response.body.items){
+      const items=j.response.body.items.item;
+      const dirs=[],spds=[],hours=[];
+      items.forEach(it=>{
+        const h=parseInt(it.tm.substring(11,13));
+        if(h>=fishS&&h<=fishE){
+          dirs.push(parseFloat(it.wd)||0);   // 풍향(°)
+          spds.push(parseFloat(it.ws)||0);   // 풍속(m/s)
+          hours.push(h);
+        }
+      });
+      kmaObs={dirs,spds,hours};
+      st.textContent+=' | 🏛️실측'+dirs.length+'h';
+      // Replace GFS with KMA observed (more accurate)
+      if(dirs.length>0){
+        gfs={d:dirs,s:spds};
+        document.getElementById('wD').value=Math.round(dirs[0]);
+        document.getElementById('wS').value=Math.round(spds[0]*10)/10;
+        st.textContent='🏛️ 기상청실측 '+dirs.length+'h (GFS대체)';
+        st.style.color='var(--c)';
+        build();
+      }
+    }
+  }catch(e){
+    // KMA failed, keep GFS
+    console.log('KMA fetch failed:',e);
+  }
+}
+
+
+// ===== KHOA 공식 조석/조류 예보 API =====
+const KHOA_KEY='667cbb185ed6d8ef8a9ab45a74689944f1b674c449ff9616d50e2b36ed18c353';
+let khoaTide=null; // {highs:[{h,t}], lows:[{h,t}]}
+let khoaCurrent=null; // [{h,dir,spd}]
+let corrMin=0,slackH=11;
+let tideStr=1,tideMd=7,tideLb='';
+
+// 자체 계산은 KHOA API 실패 시 폴백으로만 사용
+function getMD(date){const base=new Date(2025,0,29),diff=Math.round((new Date(date.getFullYear(),date.getMonth(),date.getDate())-base)/86400000);const ld=((diff%30)+30)%30,md=(ld%15)+1;const ds=Math.min(Math.abs(md-7.5),Math.abs(md-7.5+15),Math.abs(md-7.5-15));const str=Math.max(0,1-ds/7.5);let lb='';if(md>=6&&md<=9)lb='사리';else if(md>=13||md<=2)lb='조금';else if(md>=3&&md<=5)lb='중간↑';else lb='중간↓';return{md,ld,str,lb};}
+
+async function fetchKHOATide(){
+  const dv=document.getElementById('inDate').value.replace(/-/g,'');
+  try{
+    // 조석예보: 서귀포 DT_0031
+    // 서귀포 인근 조위관측소 코드 후보 (정확한 코드를 찾을 때까지 여러 개 시도)
+    const tideCodes=['DT_0029','DT_0031','DT_0028','DT_0030','DT_0032','DT_0033'];
+    let tideOk=false;
+    for(const tc of tideCodes){
+      try{
+        const r=await fetch(`/.netlify/functions/khoa?endpoint=tideObsPreTab/search.do&ServiceKey=${KHOA_KEY}&ObsCode=${tc}&Date=${dv}&ResultType=json`);const j=await r.json();
+        if(j.result&&j.result.data&&j.result.data.length>0){
+          const highs=[],lows=[];
+          j.result.data.forEach(d=>{
+            const h=parseFloat(d.tph_time.substring(0,2))+parseFloat(d.tph_time.substring(3,5))/60;
+            const lv=parseFloat(d.tph_level);
+            if(d.tph_type&&d.tph_type.includes('고'))highs.push({h,lv,t:d.tph_time});
+            else lows.push({h,lv,t:d.tph_time});
+          });
+          khoaTide={highs,lows,raw:j.result.data};
+          if(lows.length>0){
+            const fishH=fishS+(fishE-fishS)/2;
+            let closest=lows[0];
+            lows.forEach(l=>{if(Math.abs(l.h-fishH)<Math.abs(closest.h-fishH))closest=l;});
+            slackH=closest.h;
+          }
+          if(highs.length>0&&lows.length>0){
+            const maxH=Math.max(...highs.map(h=>h.lv));
+            const minL=Math.min(...lows.map(l=>l.lv));
+            tideStr=Math.min(1,(maxH-minL)/300);
+          }
+          document.getElementById('tCS').textContent='🏛️ KHOA('+tc+'): 만조 '+highs.map(h=>h.t).join('/')+' 간조 '+lows.map(l=>l.t).join('/');
+          document.getElementById('tH').textContent=highs.map(h=>h.t).join(' / ');
+          document.getElementById('mpSlack').textContent='물돌이 '+FM(slackH);
+          console.log('KHOA tide OK from:',tc);
+          tideOk=true;break;
+        }
+      }catch(e2){console.log('KHOA tide code',tc,'failed:',e2);}
+    }
+    return tideOk;
+  }catch(e){console.log('KHOA tide failed:',e);}
+  return false;
+}
+
+async function fetchKHOACurrent(){
+  const dv=document.getElementById('inDate').value.replace(/-/g,'');
+  const st=document.getElementById('gfsSt');
+  try{
+    // KHOA tidalCurrentArea: 격자형 조류예보 (위경도 기반 - 아무 좌표나 가능)
+    const r=await fetch(`/.netlify/functions/khoa?endpoint=tidalCurrentArea/search.do&ServiceKey=${KHOA_KEY}&Date=${dv}&Lat=${pLat.toFixed(2)}&Lon=${pLon.toFixed(2)}&ResultType=json`);const j=await r.json();
+    if(j.result&&j.result.data&&j.result.data.length>0){
+      khoaCurrent=j.result.data.map(d=>({
+        h:parseFloat(d.current_hl_time?d.current_hl_time.substring(0,2):d.current_time?d.current_time.substring(0,2):'0')
+          +parseFloat(d.current_hl_time?d.current_hl_time.substring(3,5):d.current_time?d.current_time.substring(3,5):'0')/60,
+        dir:parseFloat(d.current_dir)||0,
+        spd:parseFloat(d.current_spd||d.current_speed)||0,
+        time:d.current_hl_time||d.current_time||''
+      })).filter(d=>d.h>=0&&d.h<=24).sort((a,b)=>a.h-b.h);
+      if(khoaCurrent.length>0){
+        console.log('KHOA tidalCurrentArea OK:',khoaCurrent.length,'points at',pLat.toFixed(2),pLon.toFixed(2));
+        st.textContent+=' | 🌊KHOA조류'+khoaCurrent.length+'h';
+        return true;
+      }
+    }
+    // Fallback: fcTidalCurrent (지점형) 
+    const codes=['16LTC01','16LTC02','16LTC03','16LTC04','16LTC05','16LTC13'];
+    for(const code of codes){
+      try{
+        const r2=await fetch(`/.netlify/functions/khoa?endpoint=fcTidalCurrent/search.do&ServiceKey=${KHOA_KEY}&ObsCode=${code}&Date=${dv}&ResultType=json`);const j2=await r2.json();
+        if(j2.result&&j2.result.data&&j2.result.data.length>0){
+          khoaCurrent=j2.result.data.map(d=>({
+            h:parseFloat(d.current_time.substring(0,2))+parseFloat(d.current_time.substring(3,5))/60,
+            dir:parseFloat(d.current_dir)||0,
+            spd:parseFloat(d.current_speed)||0,
+            time:d.current_time
+          }));
+          console.log('KHOA fcTidalCurrent fallback from:',code);
+          return true;
+        }
+      }catch(e2){}
+    }
+  }catch(e){console.log('KHOA current failed:',e);}
+  st.textContent+=' | ⚠️조류:자체계산';
+  return false;
+}
+
+function calcCorr(){
+  const dv=document.getElementById('inDate').value;
+  const md=getMD(new Date(dv));
+  tideMd=md.md;tideStr=md.str;tideLb=md.lb;
+  // KHOA 데이터가 있으면 그것 사용, 없으면 자체 계산 폴백
+  if(!khoaTide){
+    const dist=DK(pLat,pLon,sLa,sLo);const spd=Math.sqrt(9.81*sDepth)*3.6;const prop=Math.round(dist/spd*60*1.5);const lag=60;corrMin=prop+lag;
+    const ls=(md.ld*50/60)%12.4;const ht1=(6+ls+2.5)%24,ht2=(ht1+12.4)%24;const sl=(ht2+1)%24;slackH=(sl+corrMin/60)%24;
+    document.getElementById('tH').textContent=FM(ht2)+' / '+FM(ht1);
+    document.getElementById('tWhy').textContent='⚠️ KHOA 미수신 - 자체계산 (폴백)';
+  }else{
+    document.getElementById('tWhy').textContent='🏛️ KHOA 공식 조석예보 사용';
+  }
+  document.getElementById('tS').textContent=sN;
+  document.getElementById('tDist').textContent=DK(pLat,pLon,sLa,sLo).toFixed(1)+'km';
+  document.getElementById('tCS').textContent='🔄 '+FM(slackH)+' ('+md.md+'물 '+md.lb+')';
+  document.getElementById('mpSlack').textContent='물돌이 '+FM(slackH);
+  return md;
+}
+
+
+function calc(wF,wSp,cD,cSp,aP,hasA){
+  // 물리 모델 v4 (2026-04-21 GPX 실측 검증)
+  // 선수방향: 풍닻=선수에서 투입 → 조류 반대방향으로 선수 당김
+  // 실측: 들물70°시 선수210°(바람+조류반대 블렌드), 날물250°시 선수~90°(조류반대 우세)
+
+  // === 1. 선수 방향 (풍닻 견인 + 바람 토크 균형) ===
+  let bow;
+  const cOpp=(cD+180)%360; // 조류 반대 = 풍닻이 선수를 당기는 방향
+  if(!hasA){
+    // 풍닻 없음: 바람 or 조류에 밀려 방향 결정
+    const wFo=wSp*.1, cFo=cSp*1;
+    bow = wFo>cFo*.5 ? (wF+90)%360 : cOpp;
+  } else {
+    // 풍닻 있음: 선수 = 바람방향과 조류반대방향의 가중 블렌드
+    // 조류 강할수록 풍닻 견인력 우세 → 선수가 조류 반대로
+    // 조류 약하면 바람이 선수 방향 결정
+    const cWeight = Math.min(1, cSp / (cSp + wSp*0.08 + 0.01));
+    const wWeight = 1 - cWeight;
+    const wR=wF*Math.PI/180, cR=cOpp*Math.PI/180;
+    const bx = wWeight*Math.sin(wR) + cWeight*Math.sin(cR);
+    const by = wWeight*Math.cos(wR) + cWeight*Math.cos(cR);
+    bow = ((Math.atan2(bx,by)*180/Math.PI)%360+360)%360;
+  }
+
+  // === 2. 조류 동조 (풍닻 커플링) ===
+  const anchorCoupling = hasA ? (0.90 + 0.08 * aP) : 0.15;
+  const cE = cSp * anchorCoupling;
+
+  // === 3. 바람 밀림 ===
+  const windDragCoeff = hasA ? 0.025 : 0.06;
+  const anchorWindReduction = hasA ? (0.3 + 0.4 * aP) : 0;
+  const wDr = wSp * windDragCoeff * (1 - anchorWindReduction);
+
+  // === 4. 절대 드리프트 벡터 ===
+  const cr=DR(cD), wr=DR((wF+180)%360);
+  const cvx=cE*Math.sin(cr), cvy=cE*Math.cos(cr);
+  const wvx=wDr*Math.sin(wr), wvy=wDr*Math.cos(wr);
+  const rx=cvx+wvx, ry=cvy+wvy;
+  const rS=Math.sqrt(rx*rx+ry*ry);
+  const rD=RD(Math.atan2(rx,ry));
+
+  // === 5. 진입 방향 = 이동방향 vs 선수 ===
+  let eA=((rD-bow)%360+360)%360;
+  let eT,em,col,pr;
+  if(rS<.01){eT='정조';em='🔄';col='#ff9f43';pr=2;} else if(rS<.05){eT='물돌이';em='🔄';col='#ff9f43';pr=2;}
+  else if(eA<=30||eA>=330){eT='선수▲';em='🔥';col='#00e5a0';pr=5;}
+  else if(eA>30&&eA<=75){eT='우현선수';em='✅';col='#4ecdc4';pr=4;}
+  else if(eA>75&&eA<=105){eT='우현';em='✅';col='#4ecdc4';pr=3;}
+  else if(eA>105&&eA<=150){eT='우현선미';em='⚠️';col='#ff9f43';pr=2;}
+  else if(eA>150&&eA<=210){eT='선미▼';em='⚠️';col='#ff6b6b';pr=1;}
+  else if(eA>210&&eA<=255){eT='좌현선미';em='⚠️';col='#ff9f43';pr=2;}
+  else if(eA>255&&eA<=285){eT='좌현';em='✅';col='#4ecdc4';pr=3;}
+  else{eT='좌현선수';em='✅';col='#4ecdc4';pr=4;}
+
+  const residualRatio = hasA ? Math.max(0, 1 - anchorCoupling) : 0.85;
+  return{bow,rD,rS,eT,em,col,pr,cvx,cvy,wvx,wvy,rx,ry,cE,wDr,cD,cSp,residualRatio};
+}
+
+function build(){fishS=+document.getElementById('fishStart').value||6;fishE=+document.getElementById('fishEnd').value||18;const wF=+document.getElementById('wD').value||315,wSp=+document.getElementById('wS').value||5;const flD=+document.getElementById('fD').value||330,ebD=+document.getElementById('eD').value||150;const cMax=+document.getElementById('cM').value||.8;const hasA=document.getElementById('aY').value==='1',aP=+document.getElementById('aS').value||.65;const md=calcCorr();const totalSteps=(fishE-fishS)*6;document.getElementById('pSl').max=totalSteps-1;H=[];
+for(let i=0;i<totalSteps;i++){const h=fishS+i/6,ts=FM(h);let wd=wF,ws=wSp;if(gfs){const hi=Math.floor(h)-fishS,hf=h-Math.floor(h);if(hi>=0&&hi<gfs.d.length){const nx=Math.min(hi+1,gfs.d.length-1);wd=gfs.d[hi]+(gfs.d[nx]-gfs.d[hi])*hf;ws=gfs.s[hi]+(gfs.s[nx]-gfs.s[hi])*hf;}}let cd,cs,ph;
+if(khoaCurrent&&khoaCurrent.length>1){
+  // KHOA 공식 조류 데이터 사용 (시간 보간)
+  let p0=khoaCurrent[0],p1=khoaCurrent[1];
+  for(let k=0;k<khoaCurrent.length-1;k++){if(khoaCurrent[k].h<=h&&khoaCurrent[k+1].h>h){p0=khoaCurrent[k];p1=khoaCurrent[k+1];break;}if(k===khoaCurrent.length-2){p0=khoaCurrent[k];p1=khoaCurrent[k+1];}}
+  const frac=(h-p0.h)/(p1.h-p0.h||1);
+  cd=p0.dir+(p1.dir-p0.dir)*frac;cs=p0.spd+(p1.spd-p0.spd)*frac;
+  ph=cs<0.05?'물돌이':cd>180?'날물':'들물';
+}else{
+  // 폴백: 자체 사인파 근사 + 위상차 보정
+  // 조류 전환은 만조/간조보다 약 2시간 늦음 (실측 검증: 4/21 GPX + 4/25 선장 확인)
+  const PHASE_LAG=2; // 조류 위상차 (시간)
+  const currentSlackH=slackH+PHASE_LAG; // 실제 조류 전환 시각
+  const dt=h-currentSlackH,tw=1.5;
+  if(dt<-tw){cd=flD;cs=cMax*tideStr*Math.max(0,Math.sin(Math.PI*(h-fishS)/Math.max(currentSlackH-tw-fishS,1)));ph='들물';}
+  else if(dt>tw){cd=ebD;cs=cMax*tideStr*Math.max(0,Math.sin(Math.PI*(h-currentSlackH-tw)/Math.max(fishE-currentSlackH-tw,1)));ph='날물';}
+  else{const pg=(dt+tw)/(2*tw);let ad=ebD-flD;if(ad<0)ad+=360;cd=(flD+ad*pg)%360;cs=cMax*tideStr*.06;ph='물돌이';}
+}
+const r=calc(wd,ws,cd,cs,aP,hasA);r.h=h;r.ts=ts;r.ph=ph;r.wd=wd;r.ws=ws;H.push(r);}
+P=[{lat:pLat,lon:pLon}];let la=pLat,lo=pLon;H.forEach(d=>{la+=d.rS/6*Math.cos(DR(d.rD))/60;lo+=d.rS/6*Math.sin(DR(d.rD))/(60*Math.cos(DR(la)));P.push({lat:la,lon:lo,d});});drawMap();buildTL();tick();}
+
+function drawMap(){hMks.forEach(m=>M.removeLayer(m));hMks=[];if(tLine)M.removeLayer(tLine);if(sMk)M.removeLayer(sMk);if(sMar)M.removeLayer(sMar);if(trLine)M.removeLayer(trLine);vGrp.clearLayers();sMk=L.marker([pLat,pLon],{icon:L.divIcon({className:'',html:'<div style="font-size:18px;filter:drop-shadow(0 0 3px #000)">⭐</div>',iconSize:[20,20],iconAnchor:[10,10]})}).addTo(M);tLine=L.polyline(P.map(p=>[p.lat,p.lon]),{color:'#ffd93d',weight:1.5,opacity:.2,dashArray:'4,4'}).addTo(M);P.forEach((p,i)=>{if(!i||i%6)return;const d=p.d;if(!d)return;const co=d.ph==='물돌이'?'#ff9f43':d.ph==='들물'?'#00e5a0':'#ff6b6b';hMks.push(L.circleMarker([p.lat,p.lon],{radius:3.5,fillColor:co,fillOpacity:.55,color:'#fff2',weight:.5}).addTo(M));hMks.push(L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:`<span style="font:700 8px 'IBM Plex Mono';color:${co};text-shadow:0 0 3px #000">${String(Math.floor(d.h)).padStart(2,'0')}</span>`,iconSize:[12,9],iconAnchor:[-2,4]})}).addTo(M));});sMar=mkShip(P[1]||P[0]);if(P.length>2)M.fitBounds(L.latLngBounds(P.map(p=>[p.lat,p.lon])).pad(.15));}
+
+function mkShip(p){const d=p.d||H[0];const bs=getBestSeat(d);return L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:sSvg(d.bow,d.rD,d.ph,bs),iconSize:[100,100],iconAnchor:[50,50]}),zIndexOffset:1000}).addTo(M);}
+function getBestSeat(d){
+  if(!d)return 1;
+  const eA=((d.rD-d.bow)%360+360)%360;
+  let seat=Math.floor(eA/36)+1;
+  if(seat>10)seat=10;if(seat<1)seat=1;
+  return seat;
+}
+function sSvg(bw,dr,ph,bestSeat){
+  const pc=ph==='들물'?'#00e5a0':ph==='날물'?'#ff6b6b':'#ff9f43';
+  bestSeat=bestSeat||1;
+  // 10 seat positions around the boat (clockwise from bow-starboard)
+  const seats=[
+    {n:1,x:50,y:18},{n:2,x:54,y:26},{n:3,x:54,y:35},
+    {n:4,x:54,y:44},{n:5,x:50,y:52},
+    {n:6,x:30,y:52},{n:7,x:26,y:44},{n:8,x:26,y:35},
+    {n:9,x:26,y:26},{n:10,x:30,y:18}
+  ];
+  let seatSvg='';
+  seats.forEach(s=>{
+    const isBest=s.n===bestSeat;
+    const isAdj=Math.abs(s.n-bestSeat)<=1||(bestSeat===1&&s.n===10)||(bestSeat===10&&s.n===1);
+    const fill=isBest?'#ff0000':isAdj?'#ff9f43':'#2a4a6e';
+    const op=isBest?'1':isAdj?'.7':'.4';
+    const r=isBest?5:3.5;
+    const anim=isBest?' class="best-blink"':'';
+    seatSvg+=`<circle cx="${s.x}" cy="${s.y}" r="${r}" fill="${fill}" opacity="${op}" stroke="${isBest?'#fff':'none'}" stroke-width="${isBest?1.5:0}"${anim}/>`;
+    seatSvg+=`<text x="${s.x}" y="${s.y+1}" text-anchor="middle" fill="${isBest?'#fff':'#8aa'}" font-size="${isBest?7:5}" font-weight="${isBest?900:400}" font-family="IBM Plex Mono">${s.n}</text>`;
+  });
+  return`<svg width="100" height="100" viewBox="0 0 80 80">
+<style>.best-blink{animation:bk .8s infinite}@keyframes bk{0%,100%{opacity:1}50%{opacity:.3}}</style>
+<g transform="rotate(${bw},40,40)">
+<path d="M40,5 L52,20 L52,55 L48,62 L32,62 L28,55 L28,20Z" fill="rgba(78,205,196,.15)" stroke="#4ecdc4" stroke-width="2.5"/>
+<polygon points="40,1 45,9 35,9" fill="#4ecdc4"/>
+<text x="40" y="-1" text-anchor="middle" fill="#4ecdc4" font-size="7" font-weight="900" font-family="Noto Sans KR">선수</text>
+<text x="40" y="76" text-anchor="middle" fill="rgba(78,205,196,.4)" font-size="6" font-family="Noto Sans KR">선미</text>
+<circle cx="28" cy="32" r="3" fill="rgba(255,60,60,.7)" stroke="#f33" stroke-width=".5"/>
+<circle cx="52" cy="32" r="3" fill="rgba(0,200,100,.7)" stroke="#0c6" stroke-width=".5"/>
+<text x="24" y="32" text-anchor="middle" fill="#f66" font-size="5">좌</text>
+<text x="56" y="32" text-anchor="middle" fill="#0a6" font-size="5">우</text>
+${seatSvg}
+</g>
+<g transform="rotate(${dr},40,40)">
+<line x1="40" y1="38" x2="40" y2="12" stroke="${pc}" stroke-width="2.5" opacity=".8"/>
+<polygon points="40,9 44,16 36,16" fill="${pc}" opacity=".8"/>
+</g>
+</svg>`;}
+
+function drawVec(p,d){vGrp.clearLayers();if(!d)return;const s=.007,cl=Math.cos(DR(p.lat));const wo={lat:p.lat+.0018,lon:p.lon-.0018},wp=(d.wd+180)%360,wl=Math.max(d.wDr*s*30,.0018);const we={lat:wo.lat+wl*Math.cos(DR(wp)),lon:wo.lon+wl*Math.sin(DR(wp))/cl};L.polyline([[wo.lat,wo.lon],[we.lat,we.lon]],{color:'#ff6b6b',weight:4,opacity:.8,dashArray:'7,3'}).addTo(vGrp);L.circleMarker([we.lat,we.lon],{radius:5,fillColor:'#ff6b6b',fillOpacity:1,stroke:false}).addTo(vGrp);vGrp.addLayer(L.marker([we.lat,we.lon],{icon:L.divIcon({className:'',html:`<span style="font:700 10px IBM Plex Mono;color:#ff6b6b;text-shadow:0 0 3px #000;background:rgba(0,0,0,.5);padding:1px 3px;border-radius:2px">바람${Math.round(d.wd)}°</span>`,iconSize:[70,14],iconAnchor:[-2,7]})}));
+const co2={lat:p.lat-.0018,lon:p.lon+.0018},cl2=Math.max(d.cE*s*18,.0018);const ce={lat:co2.lat+cl2*Math.cos(DR(d.cD)),lon:co2.lon+cl2*Math.sin(DR(d.cD))/cl};L.polyline([[co2.lat,co2.lon],[ce.lat,ce.lon]],{color:'#00e5a0',weight:4,opacity:.8}).addTo(vGrp);L.circleMarker([ce.lat,ce.lon],{radius:5,fillColor:'#00e5a0',fillOpacity:1,stroke:false}).addTo(vGrp);vGrp.addLayer(L.marker([ce.lat,ce.lon],{icon:L.divIcon({className:'',html:`<span style="font:700 10px IBM Plex Mono;color:#00e5a0;text-shadow:0 0 3px #000;background:rgba(0,0,0,.5);padding:1px 3px;border-radius:2px">조류${d.cSp.toFixed(1)}kn</span>`,iconSize:[80,14],iconAnchor:[-2,7]})}));
+const rl=Math.max(d.rS*s*18,.0018);const re={lat:p.lat+rl*Math.cos(DR(d.rD)),lon:p.lon+rl*Math.sin(DR(d.rD))/cl};L.polyline([[p.lat,p.lon],[re.lat,re.lon]],{color:'#ffd93d',weight:6,opacity:.85}).addTo(vGrp);L.circleMarker([re.lat,re.lon],{radius:6,fillColor:'#ffd93d',fillOpacity:1,stroke:false}).addTo(vGrp);vGrp.addLayer(L.marker([re.lat,re.lon],{icon:L.divIcon({className:'',html:`<span style="font:800 11px IBM Plex Mono;color:#ffd93d;text-shadow:0 0 4px #000;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:2px">합성${d.rD.toFixed(0)}°</span>`,iconSize:[80,16],iconAnchor:[-2,7]})}));}
+
+function buildTL(){const grid=document.getElementById('tlGrid');grid.innerHTML='';const hourly=[];for(let h=fishS;h<fishE;h++){const idx=(h-fishS)*6;const d=H[idx];if(!d)continue;hourly.push(d);// 정조 ±1시간 구간 표시
+const isSlackZone=Math.abs(h-(slackH+2))<=1||Math.abs(h-(slackH+2+6.2))<=1||Math.abs(h-(slackH+2-6.2))<=1;
+const item=document.createElement('div');item.className='tl-item'+(d.ph==='물돌이'?' slack':'')+(isSlackZone?' slack-zone':'');item.style.background=d.col+'25';item.style.color=d.col;item.innerHTML=`<div class="tl-h">${String(h).padStart(2,'0')}</div><div class="tl-e">${d.em}</div>`;item.onclick=()=>{document.getElementById('pSl').value=idx;tick();};grid.appendChild(item);}
+let bS=-1,bL=0,cS2=-1,cL=0;hourly.forEach((d,i)=>{if(d.pr>=4){if(cS2<0)cS2=i;cL++;}else{if(cL>bL){bL=cL;bS=cS2;}cS2=-1;cL=0;}});if(cL>bL){bL=cL;bS=cS2;}
+if(bL>0){document.getElementById('bestV').textContent=`🔥 ${String(fishS+bS).padStart(2,'0')}~${String(fishS+bS+bL).padStart(2,'0')}시 (${bL}시간)`;document.getElementById('bestD').textContent='선수~우현선수 진입 유지 — 최적 시간대';}
+else{cS2=-1;cL=0;bS=-1;bL=0;hourly.forEach((d,i)=>{if(d.pr>=3){if(cS2<0)cS2=i;cL++;}else{if(cL>bL){bL=cL;bS=cS2;}cS2=-1;cL=0;}});if(cL>bL){bL=cL;bS=cS2;}if(bL>0){document.getElementById('bestV').textContent=`✅ ${String(fishS+bS).padStart(2,'0')}~${String(fishS+bS+bL).padStart(2,'0')}시 (${bL}시간)`;document.getElementById('bestD').textContent='우현 이상 진입 구간';}else{
+  // 항상 가장 오래 유지되는 진입 방향 표시
+  let maxPr=0,maxSeat='';
+  const seatCount={};
+  hourly.forEach(d=>{
+    const seat=Math.floor(((d.rD-d.bow+360)%360)/36)+1;
+    const sn=seat>10?10:seat<1?1:seat;
+    seatCount[sn]=(seatCount[sn]||0)+1;
+    if(d.pr>maxPr){maxPr=d.pr;maxSeat=d.eT;}
+  });
+  const topSeat=Object.entries(seatCount).sort((a,b)=>b[1]-a[1])[0];
+  if(topSeat){
+    document.getElementById('bestV').textContent='💺 '+topSeat[0]+'번 자리 ('+topSeat[1]+'시간 유리)';
+    document.getElementById('bestD').textContent=maxSeat+' 진입 우세';
+  }else{
+    document.getElementById('bestV').textContent='🔄 물돌이 우세 — 바람 방향 기준';
+    document.getElementById('bestD').textContent='';
+  }
+}}}
+
+function drawCmp(d){const cv=document.getElementById('cmp'),rc=cv.getBoundingClientRect(),dp=devicePixelRatio||1;cv.width=rc.width*dp;cv.height=rc.height*dp;const ctx=cv.getContext('2d');ctx.scale(dp,dp);const w=rc.width,h=rc.height,cx=w/2,cy=h/2,R=Math.min(w,h)/2-18;ctx.clearRect(0,0,w,h);for(let r=R*.5;r<=R;r+=R*.5){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#1e3a6020';ctx.lineWidth=.7;ctx.stroke();}for(let dg=0;dg<360;dg+=30){const a=DR(dg-90);ctx.beginPath();ctx.moveTo(cx+(R-4)*Math.cos(a),cy+(R-4)*Math.sin(a));ctx.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));ctx.strokeStyle=dg%90===0?'#dfe8f328':'#5580a812';ctx.lineWidth=.7;ctx.stroke();}[{l:'N',g:0,c:'#f55'},{l:'E',g:90},{l:'S',g:180},{l:'W',g:270}].forEach(c=>{const a=DR(c.g-90),r=R+10;ctx.font='700 9px Noto Sans KR';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=c.c||'#dfe8f335';ctx.fillText(c.l,cx+r*Math.cos(a),cy+r*Math.sin(a));});const arrow=(x1,y1,x2,y2,co,lw,as,da)=>{const dx=x2-x1,dy=y2-y1;if(Math.sqrt(dx*dx+dy*dy)<1.5)return;const an=Math.atan2(dy,dx);ctx.save();if(da)ctx.setLineDash(da);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=co;ctx.lineWidth=lw;ctx.stroke();ctx.setLineDash([]);ctx.restore();ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-as*Math.cos(an-.4),y2-as*Math.sin(an-.4));ctx.lineTo(x2-as*Math.cos(an+.4),y2-as*Math.sin(an+.4));ctx.closePath();ctx.fillStyle=co;ctx.fill();};const mm=Math.max(Math.sqrt(d.cvx**2+d.cvy**2),Math.sqrt(d.wvx**2+d.wvy**2),Math.sqrt(d.rx**2+d.ry**2),.04),sc=R*.38/mm;arrow(cx+2,cy,cx+2+d.cvx*sc,cy-d.cvy*sc,'#00e5a0',2,6);if(d.wDr>.001)arrow(cx-2,cy,cx-2+d.wvx*sc,cy-d.wvy*sc,'#ff6b6b',1.5,5,[3,2]);ctx.save();ctx.shadowColor='#ffd93d35';ctx.shadowBlur=3;arrow(cx,cy,cx+d.rx*sc,cy-d.ry*sc,'#ffd93d',2.5,8);ctx.restore();ctx.save();ctx.translate(cx,cy);ctx.rotate(DR(d.bow));const bL2=12,bW=4;ctx.beginPath();ctx.moveTo(0,-bL2);ctx.lineTo(bW,-bL2*.3);ctx.lineTo(bW,bL2*.7);ctx.lineTo(bW*.5,bL2);ctx.lineTo(-bW*.5,bL2);ctx.lineTo(-bW,bL2*.7);ctx.lineTo(-bW,-bL2*.3);ctx.closePath();ctx.fillStyle='rgba(78,205,196,.07)';ctx.strokeStyle='rgba(78,205,196,.3)';ctx.lineWidth=1.2;ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,-bL2-2);ctx.lineTo(1.5,-bL2+1);ctx.lineTo(-1.5,-bL2+1);ctx.closePath();ctx.fillStyle='#4ecdc4';ctx.fill();ctx.restore();}
+
+function tick(){const i=+document.getElementById('pSl').value,d=H[i];if(!d)return;const p=P[i+1]||P[P.length-1];document.getElementById('pTime').textContent=d.ts;document.getElementById('mpTime').textContent=d.ts;const mp=document.getElementById('mpPhase');mp.textContent=d.ph;mp.style.color=d.ph==='물돌이'?'var(--wa)':d.ph==='들물'?'var(--c)':'var(--w)';const curSeat=getBestSeat(d);
+document.getElementById('xR').textContent=d.em+' '+d.eT+' ('+curSeat+'번 최적)';document.getElementById('xD').textContent=GC(d.rD)+'쪽 | '+d.ph;document.getElementById('xDir').innerHTML=d.rD.toFixed(0)+'°';document.getElementById('xDir').style.color=d.col;document.getElementById('xSpd').innerHTML=d.rS.toFixed(2)+'kn';document.getElementById('xBow').innerHTML=d.bow.toFixed(0)+'°';document.getElementById('lwD').textContent=Math.round(d.wd)+'°'+GC(d.wd);document.getElementById('lwS').textContent=d.ws.toFixed(1)+'m/s';document.getElementById('lcD').textContent=Math.round(d.cD)+'°'+GC(d.cD);document.getElementById('lcS').textContent=d.cSp.toFixed(2)+'kn';if(sMar)M.removeLayer(sMar);sMar=mkShip(p);if(trLine)M.removeLayer(trLine);trLine=L.polyline(P.slice(0,i+2).map(pp=>[pp.lat,pp.lon]),{color:'#ffd93d',weight:2.5,opacity:.6}).addTo(M);drawVec(p,d);const hIdx=Math.floor(d.h-fishS);document.querySelectorAll('.tl-item').forEach((c,j)=>c.classList.toggle('sel',j===hIdx));drawCmp(d);}
+
+let playSpeed=150; // ms per frame (x10 default)
+function setSpeed(ms,el){
+  playSpeed=ms;
+  document.querySelectorAll('.spd-btn').forEach(b=>b.classList.remove('act'));
+  if(el)el.classList.add('act');
+  if(pTm){clearInterval(pTm);pTm=setInterval(()=>{let v=+document.getElementById('pSl').value+1;if(v>+document.getElementById('pSl').max)v=0;document.getElementById('pSl').value=v;tick();},playSpeed);}
+}
+function togglePlay(){if(pTm){clearInterval(pTm);pTm=null;document.getElementById('playB').textContent='▶';return;}document.getElementById('playB').textContent='⏸';const sl=document.getElementById('pSl'),mx=+sl.max;pTm=setInterval(()=>{let v=+sl.value+1;if(v>mx)v=0;sl.value=v;tick();},playSpeed);}
+
+function sW(d){document.getElementById('wD').value=d;build();}
+['wD','wS','fD','eD','cM','aY','aS','inDate','fishStart','fishEnd'].forEach(id=>{const e=document.getElementById(id);if(e){e.addEventListener('change',build);e.addEventListener('input',build);}});
+
+// ===== GPS: 내 위치 =====
+function getGPS(){
+  const st=document.getElementById('gfsSt');
+  if(!navigator.geolocation){st.textContent='❌ GPS 미지원';st.style.color='var(--w)';return;}
+  st.textContent='📍 위치 확인중...';st.style.color='var(--d)';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    pLat=pos.coords.latitude;pLon=pos.coords.longitude;
+    document.getElementById('mHint').classList.add('off');
+    document.getElementById('mCoord').textContent=pLat.toFixed(5)+'N '+pLon.toFixed(5)+'E';
+    M.setView([pLat,pLon],14);
+    st.textContent='✅ 위치적용';st.style.color='var(--c)';
+    // Add marker for current pos
+    if(window._gpsMarker)M.removeLayer(window._gpsMarker);
+    window._gpsMarker=L.circleMarker([pLat,pLon],{radius:8,fillColor:'#4ecdc4',fillOpacity:.8,color:'#fff',weight:2}).addTo(M).bindPopup('📍 현재 위치');
+    calcCorr();build();
+  },err=>{
+    st.textContent='❌ GPS실패: '+err.message;st.style.color='var(--w)';
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+
+// ===== TRACK RECORDING =====
+trkActive=false;let trkWatchId=null,trkData=[],trkLine2=null,trkMarkers2=[];
+let isDrifting=true; // true=풍 넣은 상태(표류), false=풍 뺀 상태(이동/너부리)
+let segNum=0;
+const TRK_KEY='drift_track_'+new Date().toISOString().slice(0,10);
+
+function toggleTrack(){
+  if(trkActive){stopTrack();}
+  else{startTrack();}
+}
+
+function toggleDrift(){
+  isDrifting=!isDrifting;
+  const btn=document.getElementById('driftBtn');
+  if(isDrifting){
+    btn.textContent='🪂 표류중(풍)';btn.style.background='var(--c)';
+    segNum++;
+    // Mark segment start
+    trkData.push({type:'segment',mode:'drift',seg:segNum,ts:new Date().toISOString()});
+  }else{
+    btn.textContent='🚤 너부리(이동)';btn.style.background='var(--wa)';
+    segNum++;
+    trkData.push({type:'segment',mode:'transit',seg:segNum,ts:new Date().toISOString()});
+  }
+  try{localStorage.setItem(TRK_KEY,JSON.stringify(trkData));localStorage.setItem('trk_drifting',isDrifting?'1':'0');}catch(e){}
+  document.getElementById('trkSt').textContent=(isDrifting?'🪂표류':'🚤이동')+' '+trkData.filter(p=>p.type!=='segment').length+'pts';
+}
+
+function startTrack(){
+  if(!navigator.geolocation){alert('GPS를 사용할 수 없습니다');return;}
+  trkActive=true;isDrifting=true;segNum=0;
+  const btn=document.getElementById('trkBtn');
+  btn.textContent='⏹ 기록중';btn.style.background='#ff4444';
+  const db=document.getElementById('driftBtn');
+  db.style.display='inline-flex';document.getElementById('slackBtn').style.display='inline-flex';db.textContent='🪂 표류중(풍)';db.style.background='var(--c)';
+  const st=document.getElementById('trkSt');
+  // Load existing
+  try{const saved=localStorage.getItem(TRK_KEY);if(saved)trkData=JSON.parse(saved);}catch(e){}
+  trkData.push({type:'segment',mode:'drift',seg:0,ts:new Date().toISOString()});
+  st.textContent='🪂표류 0pts';st.style.color='var(--w)';
+  // 기록 상태 저장 (브라우저 재시작시 복원용)
+  localStorage.setItem('trk_active','1');
+  supaStartSession();
+  localStorage.setItem('trk_drifting',isDrifting?'1':'0');
+  // Wake Lock: 화면 꺼짐 방지
+  acquireWakeLock();
+  startGPSWatch();
+}
+
+let wakeLock=null;
+async function acquireWakeLock(){
+  try{
+    if('wakeLock' in navigator){
+      wakeLock=await navigator.wakeLock.request('screen');
+      console.log('Wake Lock 획득 — 화면 유지');
+      wakeLock.addEventListener('release',()=>{console.log('Wake Lock 해제');});
+    }
+  }catch(e){console.log('Wake Lock 불가:',e);}
+}
+
+function startGPSWatch(){
+  if(trkWatchId!==null)navigator.geolocation.clearWatch(trkWatchId);
+  trkWatchId=navigator.geolocation.watchPosition(pos=>{
+    const pt={
+      lat:pos.coords.latitude,
+      lon:pos.coords.longitude,
+      ts:new Date().toISOString(),
+      spd:pos.coords.speed,
+      hdg:pos.coords.heading,
+      acc:pos.coords.accuracy,
+      mode:isDrifting?'drift':'transit'
+    };
+    trkData.push(pt);
+    saveTrkData();
+    supaUploadPoint(pt);
+    const dPts=trkData.filter(p=>p.mode==='drift').length;
+    const tPts=trkData.filter(p=>p.mode==='transit').length;
+    document.getElementById('trkSt').textContent=(isDrifting?'🪂표류':'🚤이동')+' 표류'+dPts+'/이동'+tPts+' ('+pt.acc.toFixed(0)+'m)';
+    drawTrackLine();
+  },err=>{
+    document.getElementById('trkSt').textContent='❌ '+err.message+' (재시도중)';
+    // GPS 실패시 3초 후 재시도
+    setTimeout(()=>{if(trkActive)startGPSWatch();},3000);
+  },{enableHighAccuracy:true,maximumAge:3000,timeout:30000});
+}
+
+function saveTrkData(){
+  try{
+    localStorage.setItem(TRK_KEY,JSON.stringify(trkData));
+    localStorage.setItem('trk_last_save',new Date().toISOString());
+  }catch(e){
+    // localStorage 용량 초과시 오래된 포인트 제거
+    if(trkData.length>5000){trkData=trkData.slice(-4000);}
+    try{localStorage.setItem(TRK_KEY,JSON.stringify(trkData));}catch(e2){}
+  }
+}
+
+// 페이지 숨김/표시 시 GPS 재시작 + Wake Lock 재획득
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&trkActive){
+    startGPSWatch();
+    acquireWakeLock();
+    console.log('페이지 복귀 — GPS 재시작');
+  }
+});
+
+function stopTrack(){
+  trkActive=false;
+  if(trkWatchId!==null){navigator.geolocation.clearWatch(trkWatchId);trkWatchId=null;}
+  // Wake Lock 해제
+  if(wakeLock){try{wakeLock.release();wakeLock=null;}catch(e){}}
+  // 기록 상태 제거
+  localStorage.removeItem('trk_active');
+  localStorage.removeItem('trk_drifting');
+  const btn=document.getElementById('trkBtn');
+  btn.textContent='🔴 항적기록';btn.style.background='var(--w)';
+  document.getElementById('driftBtn').style.display='none';document.getElementById('slackBtn').style.display='none';
+  const pts=trkData.filter(p=>p.type!=='segment');
+  const dPts=pts.filter(p=>p.mode==='drift').length;
+  const tPts=pts.filter(p=>p.mode==='transit').length;
+  const st=document.getElementById('trkSt');
+  st.textContent='⏹ 표류'+dPts+'/이동'+tPts+' 저장됨';st.style.color='var(--c)';
+  if(pts.length>0){
+    if(confirm('항적 저장 완료!\n표류 '+dPts+'pts / 이동 '+tPts+'pts\n\nGPX 파일로 다운로드?')){downloadGPX();}
+  }
+}
+
+function drawTrackLine(){
+  if(trkLine2)M.removeLayer(trkLine2);
+  trkMarkers2.forEach(m=>M.removeLayer(m));trkMarkers2=[];
+  const pts=trkData.filter(p=>p.type!=='segment');
+  if(pts.length<2)return;
+  // Draw drift=magenta, transit=gray dashed
+  let prevMode=null,seg=[];
+  pts.forEach((p,i)=>{
+    if(prevMode!==null&&p.mode!==prevMode&&seg.length>1){
+      const col=prevMode==='drift'?'#ff44ff':'#888888';
+      const dash=prevMode==='transit'?'6,4':null;
+      const ln=L.polyline(seg,{color:col,weight:prevMode==='drift'?3:2,opacity:.8,dashArray:dash}).addTo(M);
+      trkMarkers2.push(ln);
+      seg=[seg[seg.length-1]]; // keep last for connection
+    }
+    seg.push([p.lat,p.lon]);prevMode=p.mode;
+  });
+  if(seg.length>1){
+    const col=prevMode==='drift'?'#ff44ff':'#888888';
+    const dash=prevMode==='transit'?'6,4':null;
+    const ln=L.polyline(seg,{color:col,weight:prevMode==='drift'?3:2,opacity:.8,dashArray:dash}).addTo(M);
+    trkMarkers2.push(ln);
+  }
+  // Latest point
+  const last=pts[pts.length-1];
+  const mk=L.circleMarker([last.lat,last.lon],{radius:6,fillColor:last.mode==='drift'?'#ff44ff':'#888',fillOpacity:1,color:'#fff',weight:2}).addTo(M);
+  trkMarkers2.push(mk);
+  // Drift start points (segment markers)
+  trkData.filter(p=>p.type==='segment'&&p.mode==='drift').forEach(s=>{
+    const nextPt=trkData.find(p=>p.type!=='segment'&&p.ts>=s.ts);
+    if(nextPt){
+      const mk2=L.marker([nextPt.lat,nextPt.lon],{icon:L.divIcon({className:'',html:'<div style="font-size:12px">🪂</div>',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(M);
+      trkMarkers2.push(mk2);
+    }
+  });
+}
+
+
+// ===== 히트/물돌이 기록 =====
+let hitLog=[],slackLog=[];
+function recordHit(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const entry={ts:new Date().toISOString(),lat:pos.coords.latitude,lon:pos.coords.longitude,mode:isDrifting?'drift':'transit'};
+    hitLog.push(entry);
+    try{localStorage.setItem('hits_'+new Date().toISOString().slice(0,10),JSON.stringify(hitLog));}catch(e){}
+    document.getElementById('trkSt').textContent='🐟 히트 #'+hitLog.length+' 기록!';
+  },()=>{
+    hitLog.push({ts:new Date().toISOString(),lat:0,lon:0});
+    document.getElementById('trkSt').textContent='🐟 히트 #'+hitLog.length+' (GPS없음)';
+  },{enableHighAccuracy:true,timeout:5000});
+}
+function recordSlack(){
+  const entry={ts:new Date().toISOString()};
+  slackLog.push(entry);
+  try{localStorage.setItem('slacks_'+new Date().toISOString().slice(0,10),JSON.stringify(slackLog));}catch(e){}
+  document.getElementById('trkSt').textContent='🔄 물돌이 기록! '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function downloadGPX(){
+  const date=new Date().toISOString().slice(0,10);
+  const pts=trkData.filter(p=>p.type!=='segment');
+  let gpx='<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="선진입계산기">\n';
+  let cm=null;
+  pts.forEach(pt=>{
+    if(pt.mode!==cm){if(cm!==null)gpx+='</trkseg></trk>\n';cm=pt.mode;gpx+='<trk><n>'+(cm==='drift'?'표류':'이동')+'_'+date+'</n><trkseg>\n';}
+    gpx+=`<trkpt lat="${pt.lat}" lon="${pt.lon}"><time>${pt.ts}</time>`;
+    if(pt.spd!=null)gpx+=`<speed>${pt.spd}</speed>`;
+    gpx+=`<desc>${pt.mode}</desc></trkpt>\n`;
+  });
+  if(cm!==null)gpx+='</trkseg></trk>\n';
+  gpx+='</gpx>';
+  const blob=new Blob([gpx],{type:'application/gpx+xml'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='항적_'+date+'.gpx';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// Also save raw JSON
+function downloadJSON(){
+  const blob=new Blob([JSON.stringify({
+    date:new Date().toISOString().slice(0,10),
+    point:{lat:pLat,lon:pLon},
+    trackPoints:trkData,
+    settings:{
+      windDir:+document.getElementById('wD').value,
+      windSpd:+document.getElementById('wS').value,
+      floodDir:+document.getElementById('fD').value,
+      ebbDir:+document.getElementById('eD').value,
+      curMax:+document.getElementById('cM').value,
+      anchor:document.getElementById('aY').value==='1',
+      tonnage:document.getElementById('aS').value
+    }
+  },null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='항적데이터_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+// Auto-restore track on load
+window.addEventListener('load',()=>{
+  initMap();
+  // 이전 데이터 복원
+  try{const saved=localStorage.getItem(TRK_KEY);if(saved){trkData=JSON.parse(saved);if(trkData.length>0){
+    const pts=trkData.filter(p=>p.type!=='segment');
+    document.getElementById('trkSt').textContent='💾 이전기록 '+pts.length+'pts';drawTrackLine();
+  }}}catch(e){}
+  // 기록 중이었으면 자동 재시작
+  if(localStorage.getItem('trk_active')==='1'){
+    trkActive=true;
+    isDrifting=localStorage.getItem('trk_drifting')!=='0';
+    const btn=document.getElementById('trkBtn');
+    btn.textContent='⏹ 기록중';btn.style.background='#ff4444';
+    const db=document.getElementById('driftBtn');
+    db.style.display='inline-flex';document.getElementById('slackBtn').style.display='inline-flex';
+    db.textContent=isDrifting?'🪂 표류중(풍)':'🚤 너부리(이동)';
+    db.style.background=isDrifting?'var(--c)':'var(--wa)';
+    acquireWakeLock();
+    startGPSWatch();
+    document.getElementById('trkSt').textContent='🔄 기록 재시작 ('+trkData.filter(p=>p.type!=='segment').length+'pts 복원)';
+    supaStartSession().then(()=>supaUploadBatch(trkData));
+  }
+});
+
+// ===== 실측 데이터 저장소 =====
+const OBSERVATIONS = [
+  {
+    date:"2026-04-20", point:"법환/범섬남서", lat:33.22, lon:126.51,
+    slack_predicted:"09:05", slack_actual:"08:44", slack_offset_min:-21,
+    entry_all_day:"선미", best_position:"좌현중앙", best_time:"오전(들물)",
+    afternoon:"꽝(선미진입지속)", wind_felt:"체감불가(약풍)",
+    net_drift_direction:"서귀포(북쪽)방향", 
+    boat_rotation:"물바뀔때_조류와함께회전",
+    second_slack:"물돌이없이_날물지속_16:50에도10%흐름",
+    current_pattern:"들물=서향250,날물=동향70",
+    notes:"풍닻ON,9.77t,11물92%,강한조류+약한바람=순이동은바람방향"
+  },
+  {
+    date:"2026-04-21", point:"법환/범섬남서", lat:33.1852, lon:126.4544,
+    slack_predicted:"08:59", slack_actual:"08:30", slack_offset_min:-29,
+    gpx_verified:true,
+    track:{
+      flood:{from:[33.1852,126.4544],to:[33.1899,126.4802],bearing:78,speed_kn:0.71,hours:1.9},
+      ebb:{from:[33.1901,126.4810],to:[33.1947,126.4364],bearing:277,speed_kn:0.37,hours:6.0},
+      net:{north_m:1053,west_m:1671,bearing:302}
+    },
+    bow:{initial:180,stabilized:210,ebb:270,ebb_note:"바람강해서_선수유지_이동만반전"},
+    best_positions:{1:"우현선수",5:"우현선미",6:"좌현선미",10:"선수"},
+    entry_analysis:"날물시_이동277_선수270_각도7도=우현선수진입_실측일치",
+    wind_actual:"남~남남서(선수180→210°)",
+    current_pattern:"들물=서향277,날물=동향78(위상차약2시간)",
+    second_slack_actual:"~15:00",track_pattern:"동→서→동(3회왕복)",motoring_after:"17:00",notes:"풍닻ON,9.77t,12물77%,바람남남서,13:30-14:30선미조과,15시2차물돌이,이동반전(배안돌고),귀항17시이후"
+  },
+  {
+    date:"2026-04-22", point:"법환/범섬", lat:33.1905, lon:126.4785,
+    gpx_verified:false, gpx_note:"기록2pts_불충분",
+    tide:"14물56%",
+    bow:{rotation:false, note:"배회전없음_바람지배"},
+    entry_all_day:"선수",
+    wind_actual:"13시이후_매우강풍",
+    best_positions:{note:"선수진입_종일유지"},
+    pattern:"조류약56%+바람강=바람완전지배→선수고정→선수진입종일",
+    notes:"풍투입0730,풍닻ON,9.77t,14물56%,선수진입종일,배회전없음,13시이후강풍"
+  }
+];
+// 물돌이 보정 평균: (-21 + -29) / 2 = -25분
+const SLACK_CORRECTION_AVG = -25;
+
+// 4/22 예측 조건 (14물 56% - 조류 약화, 바람 영향 증가)
+// 출조 시 검증 후 관측 데이터 추가 예정
+const PREDICTIONS = {
+  "2026-04-22": {
+    tide:"14물", tideStrength:56, lunarDay:"음력3/6",
+    current_reduction: 0.72, // 12물 대비 조류 72% 수준
+    wind_influence_pct: 25,  // 바람 영향 비중 ~25%
+    expected_slack_correction: -25, // 분
+    note: "조류약화→물돌이길어짐→선수진입시간증가가능, 비예보있음"
+  }
+};
+
+// ===== SUPABASE 실시간 저장 =====
+const SUPA_URL='https://tzlxmildqbrwjcxneozb.supabase.co';
+const SUPA_KEY='sb_publishable_O7sIagfFOcRUaKUyF7aLMQ_Kn67_WdC';
+let supaSessionId=null;
+
+function supaHeaders(){
+  return {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Prefer':'return=minimal'};
+}
+
+async function supaStartSession(){
+  supaSessionId='s_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  try{
+    await fetch(SUPA_URL+'/rest/v1/track_sessions',{
+      method:'POST',headers:supaHeaders(),
+      body:JSON.stringify({id:supaSessionId,point_name:sN,lat:pLat,lon:pLon,
+        wind_dir:+document.getElementById('wD').value||0,
+        wind_spd:+document.getElementById('wS').value||0,
+        tide_info:document.getElementById('tCS')?.textContent||'',
+        notes:'auto'})
+    });
+    console.log('Supabase session started:',supaSessionId);
+  }catch(e){console.log('Supabase session failed:',e);}
+}
+
+async function supaUploadPoint(pt){
+  if(!supaSessionId)return;
+  try{
+    await fetch(SUPA_URL+'/rest/v1/track_points',{
+      method:'POST',headers:supaHeaders(),
+      body:JSON.stringify({session_id:supaSessionId,ts:pt.ts,lat:pt.lat,lon:pt.lon,
+        spd:pt.spd||0,hdg:pt.hdg||0,acc:pt.acc||0,mode:pt.mode||'drift'})
+    });
+  }catch(e){console.log('Supabase upload failed:',e);}
+}
+
+// 배치 업로드 (오프라인 복구용)
+async function supaUploadBatch(points){
+  if(!supaSessionId||!points.length)return;
+  const rows=points.filter(p=>p.type!=='segment').map(p=>({
+    session_id:supaSessionId,ts:p.ts,lat:p.lat,lon:p.lon,
+    spd:p.spd||0,hdg:p.hdg||0,acc:p.acc||0,mode:p.mode||'drift'
+  }));
+  try{
+    await fetch(SUPA_URL+'/rest/v1/track_points',{
+      method:'POST',headers:supaHeaders(),
+      body:JSON.stringify(rows)
+    });
+    console.log('Batch uploaded:',rows.length,'points');
+  }catch(e){console.log('Batch upload failed:',e);}
+}
+
+</script>
+</body>
+</html>
